@@ -9,7 +9,7 @@ interface SliderProps {
   onChange: (v: number) => void
 }
 
-export function Slider({ label, value, min, max, step = 1, unit = '', decimals = 0, onChange }: SliderProps) {
+export function Slider({ label, value = 0, min, max, step = 1, unit = '', decimals = 0, onChange }: SliderProps) {
   return (
     <div>
       <div className="flex justify-between items-center mb-1">

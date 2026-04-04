@@ -13,6 +13,12 @@ export function migrateConfig(raw: unknown): WheelConfig {
   const base: WheelConfig = {
     ...DEFAULT_CONFIG,
     ...(config as Partial<WheelConfig>),
+    // Always deep-merge nested objects so new fields get their defaults
+    wheel: { ...DEFAULT_CONFIG.wheel, ...((config as Partial<WheelConfig>).wheel ?? {}) },
+    pointer: { ...DEFAULT_CONFIG.pointer, ...((config as Partial<WheelConfig>).pointer ?? {}) },
+    spin: { ...DEFAULT_CONFIG.spin, ...((config as Partial<WheelConfig>).spin ?? {}) },
+    result: { ...DEFAULT_CONFIG.result, ...((config as Partial<WheelConfig>).result ?? {}) },
+    sound: { ...DEFAULT_CONFIG.sound, ...((config as Partial<WheelConfig>).sound ?? {}) },
   }
 
   // v1 → v1 (current): ensure all segments have required fields
@@ -27,16 +33,6 @@ export function migrateConfig(raw: unknown): WheelConfig {
     ...(seg.fontOverride !== undefined ? { fontOverride: seg.fontOverride } : {}),
     ...(seg.labelRadiusOffset !== undefined ? { labelRadiusOffset: seg.labelRadiusOffset } : {}),
   }))
-
-  // Back-fill wheel fields added after initial release
-  const wheelDefaults: Partial<typeof base.wheel> = {}
-  if (typeof base.wheel.framePadding !== 'number') wheelDefaults.framePadding = 56
-  if (typeof base.wheel.frameEnabled !== 'boolean') wheelDefaults.frameEnabled = false
-  if (typeof base.wheel.labelBold !== 'boolean') wheelDefaults.labelBold = false
-  if (typeof base.wheel.labelItalic !== 'boolean') wheelDefaults.labelItalic = false
-  if (Object.keys(wheelDefaults).length > 0) {
-    base.wheel = { ...base.wheel, ...wheelDefaults }
-  }
 
   // Ensure commands array is present
   if (!Array.isArray(base.commands)) {
