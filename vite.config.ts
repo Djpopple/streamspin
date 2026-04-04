@@ -31,7 +31,10 @@ export default defineConfig({
     outDir: 'dist',
     rollupOptions: {
       input: {
+        // Editor app (React)
         main: path.resolve(__dirname, 'index.html'),
+        // OBS overlay (vanilla TS)
+        overlay: path.resolve(__dirname, 'overlay.html'),
       },
     },
   },

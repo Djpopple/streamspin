@@ -44,13 +44,21 @@ app.use('/api/config', configRouter)
 app.use('/api/trigger', triggerRouter(io))
 app.use('/auth', authRouter)
 
-// Serve the wheel overlay page (OBS Browser Source)
+const distPath = path.join(__dirname, '../../dist')
+const isProd = process.env.NODE_ENV === 'production'
+
+// Wheel overlay — OBS Browser Source target.
+// In dev: redirect to Vite dev server (OBS Browser Source follows redirects).
+// In prod: serve Vite-built overlay.html from dist/.
 app.get('/wheel', (_req, res) => {
-  res.sendFile(path.join(__dirname, '../../public/wheel.html'))
+  if (isProd) {
+    res.sendFile(path.join(distPath, 'overlay.html'))
+  } else {
+    res.redirect('http://localhost:5173/overlay.html')
+  }
 })
 
 // Serve built React editor in production
-const distPath = path.join(__dirname, '../../dist')
 app.use(express.static(distPath))
 app.get('*', (_req, res) => {
   res.sendFile(path.join(distPath, 'index.html'))
