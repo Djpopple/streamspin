@@ -1,22 +1,25 @@
 # StreamSpin — Customisable Stream Overlay Spin Wheel
 
-A fully customisable, browser-source-ready spin wheel for live streamers on Twitch, Kick, and OnlyFans. Runs entirely on your own machine — no cloud, no subscription, no latency.
+A fully customisable, browser-source-ready spin wheel for live streamers on Twitch, Kick, and more. Runs entirely on your own machine — no cloud, no subscription, no latency.
 
 ---
 
 ## Features
 
 ### Wheel Designer
-- Add, remove, reorder, and weight segments
-- Per-segment colour picker (16-colour palette + full hex)
-- Global font selector — Inter, Oswald, Bebas Neue, Bangers, Poppins, Nunito, and more
-- Border, hub, glow, and shadow controls
-- Spin physics tuning: duration range, rotation count, easing curve, bounce effect
-- Audio: upload custom spin-start and win sounds with per-sound volume
+- Add, remove, reorder (drag-and-drop or arrows), and weight segments
+- Per-segment colour picker (10-colour palette + full hex input)
+- Per-segment advanced options: text colour, gradient fill, font override, label position offset
+- Global font selector — 16 fonts including Inter, Bebas Neue, Bangers, Times New Roman, Ravie, Bradley Hand ITC, and more
+- Bold / italic label style toggles
+- Border, hub, glow, drop shadow, and background colour controls
+- Frame ring width control (reserves space for artist frame overlays)
+- Frame overlay upload — drop a transparent PNG designed by your artist on top of the wheel
 
 ### Pointer / Indicator
 - Five built-in presets drawn with real canvas previews: Arrow, Triangle, Pin, Gem, Hand
-- Import your own PNG/JPG pointer image (auto-resized)
+- Import your own PNG/JPG pointer image (auto-resized to 256px)
+- Custom pointer rotation: snap buttons (−90°, −45°, +45°, +90°) + full 360° slider
 - Position: top, right, bottom, left
 - Scale and colour tint controls
 
@@ -30,16 +33,18 @@ A fully customisable, browser-source-ready spin wheel for live streamers on Twit
 - Configurable win message with `{winner}` placeholder
 - Background colour, opacity, font, size, and text colour
 - Adjustable display duration
+- Pop-in animation — shown in both the editor preview and the OBS overlay
 
 ### Platform Integrations
+
 | Platform | Chat Commands | Channel Points | Trigger Method |
 |---|:---:|:---:|---|
-| Twitch | Phase 3 | Phase 3 | Webhook, manual |
-| Kick | Via Botrix | — | Botrix → webhook |
-| OnlyFans | — | — | Manual / Stream Deck |
+| Twitch | ✅ | ✅ | Chat, Channel Points, Webhook |
+| Kick | Via Botrix | — | Botrix → Webhook |
+| Any tool | — | — | `POST /api/trigger` |
 
 ### OBS / Streamlabs Ready
-- Paste `http://localhost:3000/wheel` as a Browser Source (1920×1080, transparent background)
+- Paste `http://localhost:3000/wheel` as a Browser Source (any size, transparent background)
 - Config changes push live to the overlay via WebSocket — no refresh needed
 - Spin queue handles multiple simultaneous triggers
 
@@ -89,6 +94,24 @@ npm run dev
 
 ---
 
+## Frame Artwork Spec
+
+For artists creating frame overlays or custom pointers:
+
+**Frame overlay PNG:**
+- Square canvas at your target resolution (e.g. 800×800px)
+- Transparent centre — the wheel renders behind the frame
+- Design vines, cogs, borders etc. in the outer ring
+- Use "Frame ring width" in Appearance to control how much space the ring gets (default 56px, up to 160px)
+- Export as PNG with alpha
+
+**Custom pointer PNG:**
+- 64×64px recommended (auto-resized on import)
+- Tip pointing **right** (3 o'clock) — StreamSpin rotates it to the correct position
+- Use the rotation controls in the Pointer panel to fine-tune
+
+---
+
 ## Directory Structure
 
 ```
@@ -98,24 +121,31 @@ streamspin/
 ├── src/
 │   ├── app/                React editor UI
 │   │   ├── components/
-│   │   │   ├── panels/     Settings panels (Segments, Appearance, Pointer, Spin, Result)
-│   │   │   ├── ui/         Reusable primitives (Slider, Toggle, ColorInput, …)
+│   │   │   ├── panels/     Settings panels (Segments, Appearance, Pointer, Spin, Result, Integrations)
+│   │   │   ├── ui/         Reusable primitives (Slider, Toggle, ColorInput, Select, …)
 │   │   │   ├── PresetManager.tsx
 │   │   │   └── WheelPreview.tsx
 │   │   └── lib/            configApi, constants
 │   ├── wheel/              Pure Canvas renderer — no React dependency
-│   │   ├── renderer.ts
-│   │   ├── physics.ts
-│   │   └── pointers.ts
+│   │   ├── renderer.ts     renderFrame + frame/pointer image caches
+│   │   ├── physics.ts      Spin animation, winner detection, easing
+│   │   └── pointers.ts     Five canvas-drawn pointer presets
 │   ├── overlay/            OBS overlay entry (vanilla TS)
 │   ├── server/             Express + Socket.io backend
 │   │   ├── routes/         config, trigger, presets, auth
-│   │   ├── configStore.ts
-│   │   ├── presetsStore.ts
-│   │   └── socketBridge.ts
+│   │   ├── configStore.ts  Atomic config.json read/write + migration
+│   │   ├── migration.ts    Schema migration for old configs
+│   │   ├── presetsStore.ts Atomic presets.json read/write
+│   │   ├── socketBridge.ts Spin queue + event routing
+│   │   ├── tokenStore.ts   Twitch token storage + auto-refresh
+│   │   └── integrationManager.ts  Twitch chat + EventSub lifecycle
+│   ├── integrations/
+│   │   └── twitch/         chat.ts + eventsub.ts
 │   └── types/              Shared TypeScript types
-│       ├── config.ts       Master WheelConfig schema
+│       ├── config.ts       Master WheelConfig schema + DEFAULT_CONFIG
 │       └── events.ts       Socket.io event maps
+├── public/
+│   └── assets/fonts/       Drop custom font files here (.ttf / .woff2)
 ├── docs/
 │   ├── ARCHITECTURE.md
 │   └── INTEGRATIONS.md
@@ -124,14 +154,16 @@ streamspin/
 └── TODO.md
 ```
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for full technical details.  
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for full technical details.
 See [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) for platform setup guides.
 
 ---
 
-## Twitch Integration (Phase 3)
+## Twitch Integration
 
-Full Twitch integration is coming in Phase 3. The OAuth stub is already in place at `/auth/twitch`. Once complete:
+1. Fill in your channel name and bot username in the Integrations panel
+2. Click **Connect to Twitch** — browser opens for OAuth
+3. Approve access, browser auto-closes, status turns green
 
 | Command | Who | Effect |
 |---|---|---|
@@ -139,7 +171,7 @@ Full Twitch integration is coming in Phase 3. The OAuth stub is already in place
 | `!addslice <label>` | Moderator+ | Adds a segment live |
 | `!removeslice <label>` | Moderator+ | Removes a segment |
 
-Channel Points redemptions will auto-trigger a spin when a configured reward is redeemed.
+Channel Points redemptions auto-trigger a spin when a configured reward is redeemed.
 
 ## Kick Integration
 
@@ -158,9 +190,17 @@ See [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) for full details.
 
 ---
 
+## Keyboard Shortcuts
+
+| Key | Action |
+|---|---|
+| `Space` | Test spin (when not focused on a text input) |
+
+---
+
 ## Roadmap
 
-See [TODO.md](TODO.md) for the full phased task breakdown.
+See [TODO.md](TODO.md) for the full phased task breakdown. Phases 0–4 are complete. Phase 5 is Electron packaging.
 
 ---
 

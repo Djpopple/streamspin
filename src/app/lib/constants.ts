@@ -20,6 +20,11 @@ export const FONTS = [
   { label: 'Verdana',         value: 'Verdana, sans-serif' },
   { label: 'Courier New',     value: '"Courier New", monospace' },
   { label: 'Comic Sans MS',   value: '"Comic Sans MS", cursive' },
+  { label: 'Times New Roman',  value: '"Times New Roman", serif' },
+  { label: 'Permanent Marker', value: '"Permanent Marker", cursive' },
+  { label: 'Ravie',            value: 'Ravie, cursive' },
+  { label: 'Bradley Hand ITC', value: '"Bradley Hand ITC", cursive' },
+  { label: 'CC Zoinks',        value: '"CC Zoinks", cursive' },
 ]
 
 export const EASING_OPTIONS = [

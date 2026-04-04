@@ -1,11 +1,11 @@
 // Live wheel preview rendered in the editor.
 // Uses the same renderer and physics as the OBS overlay — pixel-perfect match.
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Socket } from 'socket.io-client'
 import type { ServerToClientEvents, ClientToServerEvents } from '@shared/events'
 import type { WheelConfig } from '@shared/config'
-import { renderFrame, preloadCustomPointer } from '../../wheel/renderer'
+import { renderFrame, preloadCustomPointer, preloadFrameOverlay } from '../../wheel/renderer'
 import {
   computeSegmentLayout,
   createSpinAnimation,
@@ -14,6 +14,13 @@ import {
   pointerCanvasAngle,
 } from '../../wheel/physics'
 import type { SpinAnimation, SegmentLayout } from '../../wheel/physics'
+
+function hexToRgba(hex: string, opacity: number): string {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return `rgba(${r},${g},${b},${opacity})`
+}
 
 type AppSocket = Socket<ServerToClientEvents, ClientToServerEvents>
 
@@ -25,6 +32,8 @@ interface Props {
 
 export function WheelPreview({ config, socket, size = 480 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [resultText, setResultText] = useState<string | null>(null)
+  const resultTimerRef = useRef<ReturnType<typeof setTimeout>>()
 
   // Keep mutable refs so the animation loop always sees the latest values
   // without needing to restart the loop on every config change.
@@ -40,6 +49,9 @@ export function WheelPreview({ config, socket, size = 480 }: Props) {
     layoutRef.current = computeSegmentLayout(config.segments)
     if (config.pointer.customImageDataUrl) {
       preloadCustomPointer(config.pointer.customImageDataUrl)
+    }
+    if (config.wheel.frameImageDataUrl) {
+      preloadFrameOverlay(config.wheel.frameImageDataUrl)
     }
   }, [config])
 
@@ -74,6 +86,15 @@ export function WheelPreview({ config, socket, size = 480 }: Props) {
             triggeredBy: triggeredByRef.current,
           })
           animRef.current = null
+
+          // Show result overlay in editor preview
+          const { result } = configRef.current
+          if (result.enabled) {
+            const text = result.messageTemplate.replace('{winner}', winnerSegment.label)
+            setResultText(text)
+            clearTimeout(resultTimerRef.current)
+            resultTimerRef.current = setTimeout(() => setResultText(null), result.duration)
+          }
         }
       }
 
@@ -108,12 +129,31 @@ export function WheelPreview({ config, socket, size = 480 }: Props) {
     return () => { socket.off('spin', handleSpin) }
   }, [socket])
 
+  const { result } = config
+
   return (
-    <canvas
-      ref={canvasRef}
-      width={size}
-      height={size}
-      style={{ width: size, height: size }}
-    />
+    <div className="relative" style={{ width: size, height: size }}>
+      <canvas
+        ref={canvasRef}
+        width={size}
+        height={size}
+        style={{ width: size, height: size }}
+      />
+      {resultText && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div
+            className="px-8 py-5 rounded-2xl font-bold text-center max-w-[80%] break-words animate-result-pop"
+            style={{
+              background: hexToRgba(result.backgroundColor, result.backgroundOpacity),
+              color: result.textColor,
+              fontFamily: result.font,
+              fontSize: Math.min(result.fontSize, size / 8),
+            }}
+          >
+            {resultText}
+          </div>
+        </div>
+      )}
+    </div>
   )
 }

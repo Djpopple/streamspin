@@ -23,7 +23,7 @@ This file is the canonical source of truth for AI-assisted development on this p
 | Twitch EventSub | Native WebSocket | Lightweight enough to implement directly |
 | Kick chat | Botrix bridge (webhook) | Botrix handles Kick auth; we just receive a POST |
 | State persistence | `config.json` + `presets.json` | No DB dependency for a local tool |
-| Packaging | Electron (Phase 4) | Distribute as single executable |
+| Packaging | Electron (Phase 5) | Distribute as single executable |
 
 Do **not** introduce new major dependencies without a clear reason. This is a local tool — keep it lean.
 
@@ -189,8 +189,21 @@ This is a **local tool**. No cloud deployment. Distribution in Phase 4 will be v
 
 ## What's Already Done (Don't Re-implement)
 
-- Named wheel presets (`presetsStore.ts` + `PresetManager.tsx`) — Phase 4 item completed early
+- Named wheel presets (`presetsStore.ts` + `PresetManager.tsx`)
 - Spin queue in `socketBridge.ts` — handles multiple simultaneous triggers
 - OBS URL copy button in the editor header
 - Config import/export (JSON download/upload) in the editor header
 - Webhook trigger endpoint (`POST /api/trigger`) with secret auth
+- Twitch OAuth, chat (tmi.js), and EventSub (native WS) — fully wired in `integrationManager.ts`
+- Kick integration via Botrix bridge — documented in IntegrationsPanel
+- Drop shadow, glow, gradient fills, per-segment font/colour/position overrides
+- Frame overlay system (`frameImageDataUrl` + `frameEnabled` on WheelAppearance)
+- Custom pointer rotation (`customRotation` on PointerConfig)
+- Bold/italic label toggles (`labelBold`, `labelItalic` on WheelAppearance)
+- Frame ring width (`framePadding` on WheelAppearance)
+- Config migration (`src/server/migration.ts`) — called on every config read
+- Result overlay shown in editor preview (WheelPreview), not just OBS overlay
+- Slim custom scrollbar + sidebar overflow fix (`min-h-0` on flex container)
+- Space bar keyboard shortcut for test spin
+- Disconnect and save-error banners
+- Drag-and-drop reordering (handle-only — does not conflict with sliders)

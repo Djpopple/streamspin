@@ -128,10 +128,44 @@ export function PointerPanel({ pointer, onChange }: Props) {
           <button
             type="button"
             className="text-xs text-white/30 hover:text-white/60 mt-1 transition-colors"
-            onClick={() => onChange({ ...pointer, preset: 'arrow', customImageDataUrl: undefined })}
+            onClick={() => onChange({ ...pointer, preset: 'arrow', customImageDataUrl: undefined, customRotation: undefined })}
           >
             ✕ Remove custom
           </button>
+        )}
+
+        {/* Rotation — only for custom images */}
+        {pointer.preset === 'custom' && (
+          <div className="space-y-2 pt-1">
+            <p className="label">Image rotation</p>
+            <div className="flex gap-1.5">
+              {([-90, -45, 45, 90] as const).map(deg => (
+                <button
+                  key={deg}
+                  type="button"
+                  onClick={() => set('customRotation', ((pointer.customRotation ?? 0) + deg + 360) % 360)}
+                  className="flex-1 text-xs py-1.5 rounded-md border border-white/10 bg-white/5 hover:bg-white/10 text-white/70 transition-colors"
+                >
+                  {deg > 0 ? `+${deg}°` : `${deg}°`}
+                </button>
+              ))}
+            </div>
+            <Slider
+              label=""
+              value={pointer.customRotation ?? 0}
+              min={0} max={359} step={1} unit="°"
+              onChange={v => set('customRotation', v)}
+            />
+            {(pointer.customRotation ?? 0) !== 0 && (
+              <button
+                type="button"
+                className="text-xs text-white/30 hover:text-white/60 transition-colors"
+                onClick={() => set('customRotation', 0)}
+              >
+                Reset to 0°
+              </button>
+            )}
+          </div>
         )}
       </div>
 

@@ -6,7 +6,7 @@ import { io } from 'socket.io-client'
 import type { ServerToClientEvents, ClientToServerEvents } from '../types/events.js'
 import type { WheelConfig } from '../types/config.js'
 import { DEFAULT_CONFIG } from '../types/config.js'
-import { renderFrame, preloadCustomPointer } from '../wheel/renderer.js'
+import { renderFrame, preloadCustomPointer, preloadFrameOverlay } from '../wheel/renderer.js'
 import {
   computeSegmentLayout,
   createSpinAnimation,
@@ -126,6 +126,9 @@ socket.on('config-update', ({ config: newConfig }) => {
   layout = computeSegmentLayout(config.segments)
   if (config.pointer.customImageDataUrl) {
     preloadCustomPointer(config.pointer.customImageDataUrl)
+  }
+  if (config.wheel.frameImageDataUrl) {
+    preloadFrameOverlay(config.wheel.frameImageDataUrl)
   }
 })
 

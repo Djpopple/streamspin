@@ -6,10 +6,12 @@ export interface Segment {
   id: string
   label: string
   color: string
+  gradientColor?: string  // if set, segment draws a radial gradient from this → color
   textColor: string
-  weight: number      // relative weight for probability (default 1)
+  weight: number          // relative weight for probability (default 1)
   enabled: boolean
   fontOverride?: string
+  labelRadiusOffset?: number  // fraction of radius to shift label in/out (-0.4 … +0.4)
 }
 
 export type PointerPreset =
@@ -28,6 +30,7 @@ export interface PointerConfig {
   position: PointerPosition
   scale: number                 // 0.5 – 3.0
   colorTint?: string            // for SVG presets only
+  customRotation?: number       // extra rotation in degrees for custom image pointers
 }
 
 export type EasingFunction = 'ease-out-cubic' | 'ease-out-quint' | 'ease-out-expo'
@@ -54,6 +57,11 @@ export interface WheelAppearance {
   glowColor: string
   glowIntensity: number         // 0 – 40 px blur
   shadowEnabled: boolean
+  framePadding: number          // px ring between wheel rim and canvas edge (space for frame art)
+  frameEnabled: boolean
+  frameImageDataUrl?: string    // base64 PNG frame overlay rendered on top of wheel
+  labelBold: boolean
+  labelItalic: boolean
 }
 
 export interface ResultDisplay {
@@ -138,6 +146,10 @@ export const DEFAULT_CONFIG: WheelConfig = {
     glowColor: '#ffffff',
     glowIntensity: 10,
     shadowEnabled: true,
+    framePadding: 56,
+    frameEnabled: false,
+    labelBold: false,
+    labelItalic: false,
   },
   segments: [
     { id: '1', label: 'Prize 1', color: '#e94560', textColor: '#ffffff', weight: 1, enabled: true },

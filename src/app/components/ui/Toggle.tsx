@@ -14,8 +14,8 @@ export function Toggle({ label, checked, onChange, description, size = 'md' }: T
     ? 'w-3 h-3 top-0.5'
     : 'w-4 h-4 top-0.5'
   const translate = size === 'sm'
-    ? (checked ? 'translate-x-4' : 'translate-x-0.5')
-    : (checked ? 'translate-x-5' : 'translate-x-0.5')
+    ? (checked ? 'translate-x-[18px]' : 'translate-x-0.5')
+    : (checked ? 'translate-x-[22px]' : 'translate-x-0.5')
 
   return (
     <label className="flex items-center justify-between cursor-pointer select-none gap-3">
@@ -35,7 +35,7 @@ export function Toggle({ label, checked, onChange, description, size = 'md' }: T
         }`}
       >
         <span
-          className={`absolute ${thumb} bg-white rounded-full shadow transition-transform duration-200 ${translate}`}
+          className={`absolute left-0 ${thumb} bg-white rounded-full shadow transition-transform duration-200 ${translate}`}
         />
       </button>
     </label>

@@ -2,7 +2,10 @@ import { useState, useRef } from 'react'
 import type { Segment } from '@shared/config'
 import { Panel } from '../ui/Panel'
 import { Toggle } from '../ui/Toggle'
-import { SEGMENT_COLORS, generateId, cycleColor } from '../../lib/constants'
+import { ColorInput } from '../ui/ColorInput'
+import { Select } from '../ui/Select'
+import { Slider } from '../ui/Slider'
+import { SEGMENT_COLORS, FONTS, generateId, cycleColor } from '../../lib/constants'
 
 interface Props {
   segments: Segment[]
@@ -13,8 +16,8 @@ interface Props {
 function ColorPicker({ value, onChange }: { value: string; onChange: (c: string) => void }) {
   const inputRef = useRef<HTMLInputElement>(null)
   return (
-    <div className="absolute top-full left-0 z-20 mt-1 p-2 bg-surface-overlay rounded-lg border border-white/15 shadow-xl">
-      <div className="grid grid-cols-8 gap-1 mb-2">
+    <div className="absolute top-full left-0 z-20 mt-1 p-3 bg-surface-overlay rounded-lg border border-white/15 shadow-xl w-72">
+      <div className="grid grid-cols-10 gap-1.5 mb-3">
         {SEGMENT_COLORS.map(c => (
           <button
             key={c}
@@ -57,21 +60,42 @@ interface SegmentRowProps {
   index: number
   total: number
   colorPickerOpen: boolean
+  expanded: boolean
   onOpenColorPicker: () => void
   onCloseColorPicker: () => void
+  onToggleExpand: () => void
   onChange: (seg: Segment) => void
   onDelete: () => void
   onMove: (dir: -1 | 1) => void
+  onDragStart: () => void
+  onDragOver: (e: React.DragEvent) => void
+  onDrop: () => void
 }
 
 function SegmentRow({
-  segment, index, total,
-  colorPickerOpen, onOpenColorPicker, onCloseColorPicker,
+  segment, index, total, colorPickerOpen, expanded,
+  onOpenColorPicker, onCloseColorPicker, onToggleExpand,
   onChange, onDelete, onMove,
+  onDragStart, onDragOver, onDrop,
 }: SegmentRowProps) {
+  const hasGradient = segment.gradientColor !== undefined
+
   return (
-    <div className={`rounded-lg border transition-colors ${segment.enabled ? 'border-white/10 bg-white/5' : 'border-white/5 bg-transparent opacity-50'}`}>
+    <div
+      className={`rounded-lg border transition-colors ${segment.enabled ? 'border-white/10 bg-white/5' : 'border-white/5 bg-transparent opacity-50'}`}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+    >
+      {/* ── Main row ── */}
       <div className="flex items-center gap-2 p-2">
+        {/* Drag handle — only this element is draggable */}
+        <span
+          className="text-white/20 hover:text-white/50 cursor-grab active:cursor-grabbing text-xs select-none shrink-0 px-0.5"
+          title="Drag to reorder"
+          draggable
+          onDragStart={onDragStart}
+        >⠿</span>
+
         {/* Color swatch + picker */}
         <div className="relative shrink-0">
           <button
@@ -83,7 +107,7 @@ function SegmentRow({
           {colorPickerOpen && (
             <ColorPicker
               value={segment.color}
-              onChange={c => { onChange({ ...segment, color: c }) }}
+              onChange={c => onChange({ ...segment, color: c })}
             />
           )}
         </div>
@@ -117,9 +141,92 @@ function SegmentRow({
         >
           {segment.enabled ? '●' : '○'}
         </button>
+
+        {/* Expand toggle */}
+        <button
+          type="button"
+          title="More options"
+          onClick={onToggleExpand}
+          className={`text-xs px-1 py-1 rounded transition-colors ${expanded ? 'text-accent' : 'text-white/30 hover:text-white/60'}`}
+        >
+          {expanded ? '▲' : '▼'}
+        </button>
       </div>
 
-      {/* Row controls */}
+      {/* ── Expanded options ── */}
+      {expanded && (
+        <div className="px-3 pb-3 space-y-2.5 border-t border-white/8 pt-2.5">
+          {/* Text colour */}
+          <ColorInput
+            label="Text colour"
+            value={segment.textColor}
+            onChange={v => onChange({ ...segment, textColor: v })}
+          />
+
+          {/* Gradient */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="label">Gradient fill</span>
+              <button
+                type="button"
+                onClick={() => {
+                  if (hasGradient) {
+                    const { gradientColor: _, ...rest } = segment
+                    onChange(rest as Segment)
+                  } else {
+                    onChange({ ...segment, gradientColor: '#ffffff' })
+                  }
+                }}
+                className={`text-xs px-2 py-0.5 rounded border transition-colors ${
+                  hasGradient
+                    ? 'border-accent/50 bg-accent/15 text-accent'
+                    : 'border-white/15 text-white/40 hover:text-white/70'
+                }`}
+              >
+                {hasGradient ? 'On' : 'Off'}
+              </button>
+            </div>
+            {hasGradient && (
+              <ColorInput
+                label="Gradient start colour"
+                value={segment.gradientColor!}
+                onChange={v => onChange({ ...segment, gradientColor: v })}
+              />
+            )}
+          </div>
+
+          {/* Label position */}
+          <Slider
+            label="Label position"
+            value={Math.round((segment.labelRadiusOffset ?? 0) * 100)}
+            min={-40} max={40} step={5} unit="%"
+            onChange={v => onChange({ ...segment, labelRadiusOffset: v === 0 ? undefined : v / 100 })}
+          />
+
+          {/* Font override */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="label">Font override</span>
+              {segment.fontOverride && (
+                <button
+                  type="button"
+                  onClick={() => { const { fontOverride: _, ...rest } = segment; onChange(rest as Segment) }}
+                  className="text-xs text-white/40 hover:text-red-400 transition-colors"
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+            <Select
+              value={segment.fontOverride ?? ''}
+              options={[{ label: 'Use global font', value: '' }, ...FONTS]}
+              onChange={v => onChange({ ...segment, fontOverride: v || undefined })}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ── Row controls ── */}
       <div className="flex items-center gap-1 px-2 pb-2">
         <div className="flex gap-0.5 ml-auto">
           <button
@@ -150,8 +257,18 @@ function SegmentRow({
 
 export function SegmentsPanel({ segments, removeWinnerMode, onChange }: Props) {
   const [colorPickerIndex, setColorPickerIndex] = useState<number | null>(null)
+  const [expandedSet, setExpandedSet] = useState<Set<string>>(new Set())
   const [bulkOpen, setBulkOpen] = useState(false)
   const [bulkText, setBulkText] = useState('')
+  const dragIndexRef = useRef<number | null>(null)
+
+  const toggleExpanded = (id: string) => {
+    setExpandedSet(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
 
   const update = (segs: Segment[], rwm?: boolean) => {
     onChange(segs, rwm)
@@ -165,7 +282,8 @@ export function SegmentsPanel({ segments, removeWinnerMode, onChange }: Props) {
   }
 
   const handleDelete = (i: number) => {
-    if (segments.length <= 2) return // minimum 2 segments
+    if (segments.length <= 2) return
+    setExpandedSet(prev => { const s = new Set(prev); s.delete(segments[i].id); return s })
     update(segments.filter((_, idx) => idx !== i))
   }
 
@@ -189,13 +307,27 @@ export function SegmentsPanel({ segments, removeWinnerMode, onChange }: Props) {
     update([...segments, newSeg])
   }
 
+  const handleDragStart = (i: number) => { dragIndexRef.current = i }
+
+  const handleDragOver = (e: React.DragEvent, i: number) => {
+    e.preventDefault()
+    const from = dragIndexRef.current
+    if (from === null || from === i) return
+    const next = [...segments]
+    const [moved] = next.splice(from, 1)
+    next.splice(i, 0, moved)
+    dragIndexRef.current = i
+    onChange(next)
+  }
+
+  const handleDrop = () => { dragIndexRef.current = null }
+
   const handleBulkImport = () => {
     const lines = bulkText
       .split(/[\n,]/)
       .map(l => l.trim())
       .filter(Boolean)
     if (lines.length === 0) return
-
     const newSegs: Segment[] = lines.map((label, i) => ({
       id: generateId(),
       label,
@@ -204,7 +336,6 @@ export function SegmentsPanel({ segments, removeWinnerMode, onChange }: Props) {
       weight: 1,
       enabled: true,
     }))
-
     update([...segments, ...newSegs])
     setBulkText('')
     setBulkOpen(false)
@@ -213,7 +344,6 @@ export function SegmentsPanel({ segments, removeWinnerMode, onChange }: Props) {
   const enabledCount = segments.filter(s => s.enabled).length
 
   return (
-    // Clicking outside the panel closes color pickers
     <div onClick={() => setColorPickerIndex(null)}>
       <Panel title="Segments" badge={`${enabledCount}/${segments.length}`}>
 
@@ -233,11 +363,16 @@ export function SegmentsPanel({ segments, removeWinnerMode, onChange }: Props) {
                 index={i}
                 total={segments.length}
                 colorPickerOpen={colorPickerIndex === i}
+                expanded={expandedSet.has(seg.id)}
                 onOpenColorPicker={() => setColorPickerIndex(i)}
                 onCloseColorPicker={() => setColorPickerIndex(null)}
+                onToggleExpand={() => toggleExpanded(seg.id)}
                 onChange={seg => handleChange(i, seg)}
                 onDelete={() => handleDelete(i)}
                 onMove={dir => handleMove(i, dir)}
+                onDragStart={() => handleDragStart(i)}
+                onDragOver={e => handleDragOver(e, i)}
+                onDrop={handleDrop}
               />
             </div>
           ))}
@@ -276,7 +411,7 @@ export function SegmentsPanel({ segments, removeWinnerMode, onChange }: Props) {
         )}
 
         <div className="pt-1">
-          <p className="text-white/25 text-xs">Weight = relative probability. Min 2 segments.</p>
+          <p className="text-white/25 text-xs">Weight = relative probability. Min 2 segments. Drag to reorder.</p>
         </div>
       </Panel>
     </div>

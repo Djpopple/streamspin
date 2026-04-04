@@ -54,6 +54,18 @@ function App() {
     return () => { s.disconnect() }
   }, [])
 
+  // Keyboard shortcut: Space = test spin
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.code !== 'Space') return
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      e.preventDefault()
+      socket?.emit('editor-spin')
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [socket])
+
   // Debounced save — fires 400ms after the last config change
   const triggerSave = useCallback(() => {
     clearTimeout(saveTimerRef.current)
@@ -163,12 +175,26 @@ function App() {
         </div>
       </header>
 
+      {/* ── Banners ──────────────────────────────────────────────── */}
+      {!connected && (
+        <div className="flex items-center gap-2 px-4 py-2 bg-red-500/15 border-b border-red-500/30 text-red-300 text-xs shrink-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
+          Disconnected from server — changes won't reach the overlay until reconnected.
+        </div>
+      )}
+      {saveStatus === 'error' && (
+        <div className="flex items-center gap-2 px-4 py-2 bg-yellow-500/15 border-b border-yellow-500/30 text-yellow-300 text-xs shrink-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0" />
+          Auto-save failed — check that the server is running and config.json is writable.
+        </div>
+      )}
+
       {/* ── Main ─────────────────────────────────────────────────── */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden min-h-0">
 
         {/* ── Sidebar ── */}
-        <aside className="w-80 bg-surface-raised border-r border-white/10 overflow-y-auto shrink-0 flex flex-col">
-          <div className="p-3 space-y-3 flex-1">
+        <aside className="w-[420px] bg-surface-raised border-r border-white/10 overflow-y-auto shrink-0 flex flex-col scrollbar-thin">
+          <div className="p-3 space-y-3">
             <PresetManager
               config={config}
               onLoad={(cfg, _name, _id) => handlePresetLoad(cfg)}
@@ -241,7 +267,7 @@ function App() {
 
           {/* Wheel canvas */}
           <div className="rounded-2xl border border-white/10 bg-black/25 overflow-hidden shadow-2xl shrink-0">
-            <WheelPreview config={config} socket={socket} size={460} />
+            <WheelPreview config={config} socket={socket} size={520} />
           </div>
 
           <p className="text-white/20 text-xs shrink-0">

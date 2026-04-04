@@ -16,7 +16,6 @@ import {
 } from './pointers.js'
 
 const TWO_PI = Math.PI * 2
-const PADDING = 56  // px between canvas edge and wheel rim (leaves room for pointer)
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
@@ -37,24 +36,31 @@ export function renderFrame(
   const { width, height } = ctx.canvas
   const cx = width / 2
   const cy = height / 2
-  const radius = Math.min(width, height) / 2 - PADDING
+  const radius = Math.min(width, height) / 2 - (config.wheel.framePadding ?? 56)
 
-  // Clear
+  // Clear + background
   ctx.clearRect(0, 0, width, height)
+  if (config.wheel.backgroundColor !== 'transparent') {
+    ctx.fillStyle = config.wheel.backgroundColor
+    ctx.fillRect(0, 0, width, height)
+  }
 
   if (layout.length === 0) {
     drawEmptyState(ctx, cx, cy, radius, config)
     return
   }
 
+  applyShadow(ctx, config)
   applyGlow(ctx, config)
   drawSegments(ctx, config, layout, cx, cy, radius, rotation)
   clearGlow(ctx)
+  clearShadow(ctx)
 
   drawBorder(ctx, config, cx, cy, radius)
   drawHub(ctx, config, cx, cy)
   drawLabels(ctx, config, layout, cx, cy, radius, rotation)
   drawPointer(ctx, config, cx, cy, radius)
+  drawFrame(ctx, config, width, height)
 }
 
 // ── Segments ──────────────────────────────────────────────────────────────────
@@ -75,7 +81,21 @@ function drawSegments(
     ctx.moveTo(cx, cy)
     ctx.arc(cx, cy, radius, start, end)
     ctx.closePath()
-    ctx.fillStyle = segment.color
+
+    if (segment.gradientColor) {
+      // Radial gradient along the segment's centre line, from hub edge to rim
+      const midAngle = rotation + seg.mid
+      const gx0 = cx + config.wheel.hubSize * Math.cos(midAngle)
+      const gy0 = cy + config.wheel.hubSize * Math.sin(midAngle)
+      const gx1 = cx + radius * Math.cos(midAngle)
+      const gy1 = cy + radius * Math.sin(midAngle)
+      const grad = ctx.createLinearGradient(gx0, gy0, gx1, gy1)
+      grad.addColorStop(0, segment.gradientColor)
+      grad.addColorStop(1, segment.color)
+      ctx.fillStyle = grad
+    } else {
+      ctx.fillStyle = segment.color
+    }
     ctx.fill()
 
     // Subtle inner border between segments
@@ -152,14 +172,16 @@ function drawLabels(
     ctx.translate(cx, cy)
     ctx.rotate(midAngle)
 
-    // Text runs from inner hub outward; positioned at 55% of radius
-    const textX = radius * 0.55
+    // Text runs from inner hub outward; positioned at 55% of radius (+/- per-segment offset)
+    const textX = radius * (0.55 + (segment.labelRadiusOffset ?? 0))
     ctx.translate(textX, 0)
 
     // Clamp text to available width
     const maxWidth = radius * 0.82 - config.wheel.hubSize
 
-    ctx.font = `${fontSize}px ${font}`
+    const weight = config.wheel.labelBold ? 'bold' : 'normal'
+    const style  = config.wheel.labelItalic ? 'italic' : 'normal'
+    ctx.font = `${style} ${weight} ${fontSize}px ${font}`
     ctx.fillStyle = segment.textColor
     ctx.textAlign = 'left'
     ctx.textBaseline = 'middle'
@@ -172,6 +194,23 @@ function drawLabels(
 
     ctx.restore()
   }
+}
+
+// ── Shadow ────────────────────────────────────────────────────────────────────
+
+function applyShadow(ctx: CanvasRenderingContext2D, config: WheelConfig): void {
+  if (!config.wheel.shadowEnabled) return
+  ctx.shadowColor = 'rgba(0,0,0,0.55)'
+  ctx.shadowBlur = 18
+  ctx.shadowOffsetX = 4
+  ctx.shadowOffsetY = 4
+}
+
+function clearShadow(ctx: CanvasRenderingContext2D): void {
+  ctx.shadowColor = 'transparent'
+  ctx.shadowBlur = 0
+  ctx.shadowOffsetX = 0
+  ctx.shadowOffsetY = 0
 }
 
 // ── Glow ──────────────────────────────────────────────────────────────────────
@@ -209,6 +248,9 @@ function drawPointer(
     if (customImageDataUrl && _customImageCache.has(customImageDataUrl)) {
       const img = _customImageCache.get(customImageDataUrl)!
       const half = size * 0.6
+      if (config.pointer.customRotation) {
+        ctx.rotate(config.pointer.customRotation * Math.PI / 180)
+      }
       ctx.drawImage(img, -half, -half, half * 2, half * 2)
     }
   } else {
@@ -229,6 +271,30 @@ export function preloadCustomPointer(dataUrl: string): void {
   const img = new Image()
   img.onload = () => _customImageCache.set(dataUrl, img)
   img.src = dataUrl
+}
+
+// ── Frame overlay ─────────────────────────────────────────────────────────────
+
+const _frameImageCache = new Map<string, HTMLImageElement>()
+
+/** Pre-load a frame overlay image so it renders without async wait. */
+export function preloadFrameOverlay(dataUrl: string): void {
+  if (_frameImageCache.has(dataUrl)) return
+  const img = new Image()
+  img.onload = () => _frameImageCache.set(dataUrl, img)
+  img.src = dataUrl
+}
+
+function drawFrame(
+  ctx: CanvasRenderingContext2D,
+  config: WheelConfig,
+  width: number,
+  height: number
+): void {
+  if (!config.wheel.frameEnabled || !config.wheel.frameImageDataUrl) return
+  const img = _frameImageCache.get(config.wheel.frameImageDataUrl)
+  if (!img) return
+  ctx.drawImage(img, 0, 0, width, height)
 }
 
 // ── Empty state ───────────────────────────────────────────────────────────────
