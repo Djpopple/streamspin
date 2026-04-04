@@ -13,6 +13,7 @@ import type {
 } from '../types/events.js'
 import { configRouter } from './routes/config.js'
 import { triggerRouter } from './routes/trigger.js'
+import { presetsRouter } from './routes/presets.js'
 import { authRouter } from './routes/auth.js'
 import { setupSocketBridge } from './socketBridge.js'
 
@@ -40,8 +41,9 @@ app.use(express.json())
 app.use(cors({ origin: `http://localhost:5173` }))
 
 // API routes
-app.use('/api/config', configRouter)
+app.use('/api/config', configRouter(io))
 app.use('/api/trigger', triggerRouter(io))
+app.use('/api/presets', presetsRouter(io))
 app.use('/auth', authRouter)
 
 const distPath = path.join(__dirname, '../../dist')

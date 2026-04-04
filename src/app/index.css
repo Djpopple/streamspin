@@ -36,6 +36,18 @@
     @apply bg-white/10 border border-white/20 rounded-md px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:border-accent w-full;
   }
 
+  /* Native <select> dropdowns open against the OS background (white on Windows).
+     Force a dark background so white option text stays readable. */
+  select.input {
+    background-color: #16213e;
+  }
+
+  select option,
+  select.input option {
+    background-color: #16213e;
+    color: white;
+  }
+
   .label {
     @apply block text-sm font-medium text-white/70 mb-1;
   }

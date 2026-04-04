@@ -18,10 +18,9 @@ export function Select({ label, value, options, onChange }: SelectProps) {
         value={value}
         onChange={e => onChange(e.target.value)}
         className="input text-sm"
-        style={{ fontFamily: value }}
       >
         {options.map(o => (
-          <option key={o.value} value={o.value} style={{ fontFamily: o.value }}>
+          <option key={o.value} value={o.value}>
             {o.label}
           </option>
         ))}

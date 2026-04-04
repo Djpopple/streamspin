@@ -5,6 +5,7 @@ import type { WheelConfig } from '@shared/config'
 import { DEFAULT_CONFIG } from '@shared/config'
 import { fetchConfig, saveConfig, exportConfig, importConfig } from './lib/configApi'
 import { WheelPreview } from './components/WheelPreview'
+import { PresetManager } from './components/PresetManager'
 import { SegmentsPanel } from './components/panels/SegmentsPanel'
 import { AppearancePanel } from './components/panels/AppearancePanel'
 import { PointerPanel } from './components/panels/PointerPanel'
@@ -74,6 +75,12 @@ function App() {
   // Patch helpers — update a slice of config
   const patchConfig = useCallback(<K extends keyof WheelConfig>(key: K, val: WheelConfig[K]) => {
     setConfig(prev => ({ ...prev, [key]: val }))
+  }, [])
+
+  // Load a preset — replaces active config and re-enables saves
+  const handlePresetLoad = useCallback((cfg: WheelConfig) => {
+    skipNextSaveRef.current = false
+    setConfig(cfg)
   }, [])
 
   // Handlers
@@ -161,6 +168,11 @@ function App() {
         {/* ── Sidebar ── */}
         <aside className="w-80 bg-surface-raised border-r border-white/10 overflow-y-auto shrink-0 flex flex-col">
           <div className="p-3 space-y-3 flex-1">
+            <PresetManager
+              config={config}
+              onLoad={(cfg, _name, _id) => handlePresetLoad(cfg)}
+            />
+
             <SegmentsPanel
               segments={config.segments}
               removeWinnerMode={config.removeWinnerMode}
