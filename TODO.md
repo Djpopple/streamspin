@@ -2,180 +2,194 @@
 
 Tasks are grouped by phase. Each phase should be fully functional before moving to the next.
 
-Legend: `[ ]` = todo, `[x]` = done, `[-]` = deferred/blocked
+Legend: `[x]` = done, `[ ]` = todo, `[-]` = deferred / won't do this phase
 
 ---
 
-## Phase 0 — Project Setup
+## Phase 0 — Project Setup ✅
 
-- [ ] Initialise Vite + React + TypeScript project
-- [ ] Set up Tailwind CSS
-- [ ] Set up Express server with TypeScript (ts-node / tsx)
-- [ ] Set up Socket.io (server + client)
-- [ ] Configure ESLint + Prettier
-- [ ] Configure Vitest
-- [ ] Set up `concurrently` to run Vite + Express together (`npm run dev`)
-- [ ] Create `.env.example` with all required variables
-- [ ] Define master config schema in `src/types/config.ts`
-- [ ] Define socket event types in `src/types/events.ts`
-- [ ] Create `config.json.example`
-- [ ] Set up config read/write API endpoints (`GET /api/config`, `POST /api/config`)
-- [ ] Create GitHub repository and push initial commit
-
----
-
-## Phase 1 — Wheel Rendering Engine
-
-- [ ] `src/wheel/renderer.ts` — draw wheel from config (Canvas 2D)
-  - [ ] Segment arcs with configurable fill colours
-  - [ ] Segment border/stroke
-  - [ ] Segment labels (font, size, colour, truncation)
-  - [ ] Centre circle / hub
-  - [ ] Gradient fills per segment
-  - [ ] Glow / shadow effects
-- [ ] `src/wheel/physics.ts` — spin animation
-  - [ ] Configurable duration (min/max random range)
-  - [ ] Easing function (ease-out cubic, customisable)
-  - [ ] Configurable number of full rotations
-  - [ ] Bounce/overshoot effect (optional)
-  - [ ] Result calculation (which segment lands under pointer)
-  - [ ] Weighted segment support (probability weighting)
-- [ ] Pointer system
-  - [ ] Pointer position enum (top/right/bottom/left)
-  - [ ] Built-in SVG pointer presets: Arrow, Pin, Triangle, Gem, Hand
-  - [ ] Custom image pointer (PNG/JPG upload → base64 stored in config)
-  - [ ] Pointer scale and offset controls
-- [ ] Standalone OBS overlay page (`/wheel`)
-  - [ ] Loads config from server
-  - [ ] Connects to Socket.io
-  - [ ] Renders wheel, listens for `spin` events
-  - [ ] Transparent background CSS
-  - [ ] Win overlay / result display (configurable)
+- [x] Initialise Vite + React + TypeScript project
+- [x] Set up Tailwind CSS
+- [x] Set up Express server with TypeScript (`tsx watch`)
+- [x] Set up Socket.io (server + client, fully typed)
+- [x] Configure ESLint
+- [x] Configure Vitest
+- [x] Set up `concurrently` to run Vite + Express together (`npm run dev`)
+- [x] Create `.env.example` with all required variables
+- [x] Define master config schema in `src/types/config.ts` + `DEFAULT_CONFIG`
+- [x] Define socket event types in `src/types/events.ts`
+- [x] Create `config.json.example`
+- [x] Set up config read/write API endpoints (`GET /api/config`, `POST /api/config`)
+- [x] Create GitHub repository and push initial commit
 
 ---
 
-## Phase 2 — Editor UI
+## Phase 1 — Wheel Rendering Engine ✅
 
-- [ ] Layout: sidebar (settings panels) + main canvas preview area
-- [ ] **Segments Panel**
-  - [ ] Add / remove / reorder segments (drag and drop)
-  - [ ] Per-segment: label, colour, weight, enabled toggle
-  - [ ] Bulk import (comma-separated or newline list)
-  - [ ] "Remove winner" mode toggle (removes winning segment after spin)
-- [ ] **Appearance Panel**
-  - [ ] Background colour / transparency
-  - [ ] Wheel border width + colour
-  - [ ] Global font selector (system fonts + Google Fonts picker)
-  - [ ] Per-segment font override
-  - [ ] Label size + bold/italic
-  - [ ] Glow intensity + colour
-  - [ ] Shadow toggle
-  - [ ] Hub size + colour
-- [ ] **Pointer Panel**
-  - [ ] Preset selector (visual grid of pointer options)
-  - [ ] Upload custom image (PNG/JPG, max 512×512)
-  - [ ] Position selector (top/right/bottom/left)
-  - [ ] Scale slider
-  - [ ] Colour tint for SVG presets
-- [ ] **Spin Settings Panel**
-  - [ ] Min / max spin duration sliders
-  - [ ] Rotations (min/max random range)
-  - [ ] Bounce toggle + intensity
-  - [ ] Sound: spin start audio (upload or preset)
-  - [ ] Sound: win audio (upload or preset)
-  - [ ] Volume control
-- [ ] **Result Display Panel**
-  - [ ] Win overlay: show/hide, duration
-  - [ ] Win message template (`{winner}` placeholder)
-  - [ ] Win overlay background colour + opacity
-  - [ ] Win overlay font + size + colour
-- [ ] Config auto-save (debounced) and manual save button
-- [ ] Live preview — canvas updates in real time as settings change
-- [ ] "Test Spin" button in editor
-- [ ] Config import / export (download/upload JSON)
+- [x] `src/wheel/renderer.ts` — pure `renderFrame(ctx, config, layout, rotation)`
+  - [x] Segment arcs with configurable fill colours
+  - [x] Segment inner border/stroke
+  - [x] Segment labels — radial, font, size, truncation with maxWidth
+  - [x] Centre circle / hub with sheen gradient
+  - [-] Gradient fills per segment (deferred to Phase 4 polish)
+  - [x] Glow effect via `ctx.shadowBlur`
+  - [-] Drop shadow (config toggle present; canvas shadow rendering deferred)
+- [x] `src/wheel/physics.ts` — spin animation
+  - [x] Configurable duration (min/max random range)
+  - [x] Three easing functions: ease-out-cubic, ease-out-quint, ease-out-expo
+  - [x] Configurable rotations (min/max random range)
+  - [x] Bounce/overshoot effect (optional, configurable intensity)
+  - [x] Winner detection — segment under pointer at final angle
+  - [x] Weighted segment support (probability weighting)
+- [x] `src/wheel/pointers.ts` — five canvas-drawn presets (Arrow, Triangle, Pin, Gem, Hand)
+  - [x] Pointer position: top, right, bottom, left
+  - [x] Custom image pointer (PNG/JPG upload → base64 stored in config)
+  - [x] Pointer scale control
+  - [x] Colour tint for SVG presets
+- [x] OBS overlay page (`/wheel`)
+  - [x] Compiled as separate Vite entry (`overlay.html` → `dist/overlay.html`)
+  - [x] Connects to Socket.io on mount
+  - [x] Runs continuous `requestAnimationFrame` render loop
+  - [x] Listens for `spin` events → starts animation → emits `spin-complete`
+  - [x] Transparent background
+  - [x] Win result overlay with pop-in animation
+  - [x] Spin-start and win audio playback
+- [x] `WheelPreview` component in editor — identical render pipeline to overlay
+
+---
+
+## Phase 2 — Editor UI ✅
+
+- [x] Layout: collapsible sidebar panels + live canvas preview
+- [x] **Segments Panel**
+  - [x] Add / delete segments
+  - [x] Reorder with up/down buttons
+  - [-] Drag-and-drop reorder (deferred — up/down buttons are sufficient)
+  - [x] Per-segment: label, colour (palette + hex input), weight, enabled toggle
+  - [x] Bulk import (newline or comma-separated)
+  - [x] Remove-winner mode toggle
+- [x] **Appearance Panel**
+  - [x] Background: transparent or solid colour
+  - [x] Wheel border width + colour
+  - [x] Hub size + colour
+  - [x] Global font selector (Inter, Oswald, Bebas Neue, Bangers, Poppins, Nunito + system fonts)
+  - [x] Label font size
+  - [-] Per-segment font override (deferred to Phase 4)
+  - [-] Bold/italic label controls (deferred to Phase 4)
+  - [x] Glow toggle + colour + intensity
+  - [x] Shadow toggle
+- [x] **Pointer Panel**
+  - [x] Preset selector — live canvas previews of all 5 presets
+  - [x] Custom image upload (PNG/JPG, auto-resized to 256px)
+  - [x] Position selector (4 directions)
+  - [x] Scale slider
+  - [x] Colour tint for SVG presets
+- [x] **Spin & Sound Panel**
+  - [x] Duration min/max sliders
+  - [x] Rotations min/max sliders
+  - [x] Easing curve selector
+  - [x] Bounce toggle + intensity slider
+  - [x] Spin-start audio upload + volume
+  - [x] Win audio upload + volume
+- [x] **Result Overlay Panel**
+  - [x] Show/hide toggle
+  - [x] Duration slider
+  - [x] `{winner}` message template
+  - [x] Background colour + opacity
+  - [x] Font + size + colour
+  - [x] Live mini-preview of the result overlay
+- [x] 400ms debounced auto-save (config.json + overlay push on every change)
+- [x] Live wheel preview — canvas updates in real time as settings change
+- [x] "Test Spin" button triggers spin in editor and overlay simultaneously
+- [x] Config import / export (JSON download/upload via header buttons)
+- [x] **Named wheel presets** — save, load, update, delete multiple wheels *(Phase 4 item, completed early)*
+  - [x] `presetsStore.ts` — atomic read/write of `presets.json`
+  - [x] `GET/POST/PUT/DELETE /api/presets` + `POST /api/presets/:id/load`
+  - [x] `PresetManager.tsx` — sidebar UI with name input, list, timestamps, active indicator
+  - [x] Loading a preset pushes live to OBS overlay immediately
 
 ---
 
 ## Phase 3 — Platform Integrations
 
 ### Twitch
-- [ ] OAuth flow for bot account (Authorization Code, server-side)
-  - [ ] `/auth/twitch` redirect endpoint
-  - [ ] Token storage in config (never in browser)
-  - [ ] Token refresh logic
+- [ ] OAuth flow — Authorization Code, server-side
+  - [ ] `/auth/twitch` redirect endpoint (stub exists, needs token exchange)
+  - [ ] Token storage in `.env` (never in browser)
+  - [ ] Access token refresh before expiry
 - [ ] `src/integrations/twitch/chat.ts` — TMI.js IRC connection
-  - [ ] Connect to channel on config load
-  - [ ] Parse commands (`!spin`, `!addslice`, etc.)
-  - [ ] Configurable command prefix
-  - [ ] Cooldown per user (configurable seconds)
-  - [ ] Moderator-only commands
-  - [ ] Bot response messages (configurable)
+  - [ ] Connect to channel on startup when enabled
+  - [ ] Command parser with configurable prefix
+  - [ ] Per-user cooldown (configurable seconds, tracked in memory)
+  - [ ] Moderator-only and broadcaster-only command gates
+  - [ ] Configurable bot response messages
+  - [ ] `!spin`, `!addslice <label>`, `!removeslice <label>` commands
 - [ ] `src/integrations/twitch/eventsub.ts` — Channel Points
-  - [ ] WebSocket EventSub connection (no server required)
-  - [ ] Channel Point reward redemption → spin trigger
+  - [ ] Native WebSocket EventSub connection
+  - [ ] `channel.channel_points_custom_reward_redemption.add` subscription
   - [ ] Configurable reward ID (paste in editor)
-  - [ ] Auto-fulfil redemption on spin complete
-- [ ] Twitch settings panel in Editor
-  - [ ] Connect / disconnect button
-  - [ ] Channel name input
-  - [ ] Bot account input
-  - [ ] Command configuration (name, enabled, cooldown, response)
-  - [ ] Channel Points reward ID input
+  - [ ] Auto-fulfil redemption after spin completes
+- [ ] **Integrations panel in Editor**
+  - [ ] Twitch: connect/disconnect button, channel + bot username inputs
+  - [ ] Command list: enable/disable, trigger text, cooldown, mod-only, response
+  - [ ] Channel Points: reward ID input, enabled toggle
+  - [ ] Connection status dot (green/amber/red)
+  - [ ] Chat feed display (last N messages)
 
-### Kick
-- [ ] `src/integrations/kick/chat.ts` — Pusher WebSocket
-  - [ ] Connect to channel chat via Pusher client
-  - [ ] Parse chat messages for commands
-  - [ ] Same command interface as Twitch module
-- [ ] Kick auth (read-only chat requires channel slug only — no OAuth needed for reading)
-- [ ] Kick settings panel in Editor
-  - [ ] Channel slug input
-  - [ ] Connect / disconnect button
-  - [ ] Command configuration
+### Kick (via Botrix bridge)
+- [ ] Integrations panel: Botrix setup guide with copy-paste JS snippet
+- [ ] Verify `POST /api/trigger` works reliably from Botrix context
+- [ ] Add Botrix setup to `docs/INTEGRATIONS.md` (already documented)
 
 ### Manual / Webhook
-- [ ] `POST /api/trigger` endpoint with shared secret auth
-- [ ] Webhook secret configuration in Editor
-- [ ] "Spin Now" button in Editor (manual trigger)
-- [ ] Stream Deck plugin notes in docs
+- [x] `POST /api/trigger` endpoint with shared secret auth
+- [ ] Webhook secret input in Integrations panel
+- [x] "Test Spin" button in editor (manual trigger via socket)
+- [ ] Stream Deck setup guide in Integrations panel
 
 ---
 
 ## Phase 4 — Polish & Distribution
 
-- [ ] Error states in UI (disconnected, auth failed, etc.)
-- [ ] Connection status indicators in Editor (green/amber/red dot)
-- [ ] Dark mode Editor UI
-- [ ] Keyboard shortcuts (`Space` = spin, etc.)
-- [ ] OBS Browser Source setup guide in app (copy URL button)
-- [ ] Spin queue system (multiple pending spins execute in order)
-- [ ] Multi-wheel support (saved presets, switch between wheels)
-- [ ] Electron wrapper for single-executable distribution
+- [x] OBS Browser Source URL copy button in editor header
+- [x] Spin queue (multiple pending spins execute in order)
+- [x] Named wheel presets / multi-wheel switching *(completed in Phase 2)*
+- [ ] Drop shadow rendering in Canvas renderer
+- [ ] Per-segment font override
+- [ ] Bold/italic label controls
+- [ ] Gradient fills per segment
+- [ ] Drag-and-drop segment reordering
+- [ ] Error states in UI (failed save, auth error, server disconnect)
+- [ ] Keyboard shortcuts (`Space` = spin, `Escape` = cancel, etc.)
+- [ ] `config.json` migration logic (handle version field changes)
+- [ ] Electron wrapper — bundles server + editor into single `.exe`/`.dmg`
 - [ ] Auto-updater (Electron)
-- [ ] Installer (Windows NSIS, Mac DMG)
-- [ ] Streamlabs/StreamElements chatbot integration docs
+- [ ] Windows NSIS + Mac DMG installers
+- [ ] Streamlabs/StreamElements chatbot integration notes in docs
 
 ---
 
 ## Backlog / Future
 
-- [ ] OnlyFans integration (blocked — awaiting official API)
+- [ ] OnlyFans integration (blocked — no public streaming/chat API)
 - [ ] TikTok Live integration
 - [ ] YouTube Live integration
-- [ ] Mobile companion app (trigger wheel from phone)
-- [ ] Cloud config sync (opt-in)
-- [ ] Viewer-submitted entries queue (viewers add their own name)
 - [ ] Confetti / particle effects on win
-- [ ] Animated wheel segments (GIF/video fills)
-- [ ] Second screen mode (fullscreen result display)
-- [ ] API for third-party extensions
+- [ ] Animated segment backgrounds (GIF/video fills)
+- [ ] Viewer-submitted entry queue (viewers type `!addme` to add their name)
+- [ ] Second screen / fullscreen result display mode
+- [ ] Mobile companion app (manual trigger from phone)
+- [ ] Cloud preset sync (opt-in)
+- [ ] Public API for third-party extensions
 
 ---
 
 ## Known Blockers
 
-| Item | Blocker | Notes |
+| Item | Status | Notes |
 |---|---|---|
-| OnlyFans integration | No public streaming/chat API | Manual webhook is the workaround |
-| Kick OAuth | No official OAuth bot API as of Q1 2026 | Read-only via Pusher is possible |
-| Electron packaging | Phase 4 scope | Don't implement during Phase 1-3 |
+| Twitch OAuth token exchange | Not started | Phase 3 — stub routes exist |
+| Kick native bot API | Bypassed | Using Botrix bridge instead |
+| OnlyFans API | Blocked externally | Manual webhook is the workaround |
+| Electron packaging | Deferred | Phase 4 scope |
+| Canvas drop shadow | Deferred | Config toggle exists; rendering not wired |

@@ -2,105 +2,87 @@
 
 ## Overview
 
-StreamSpin connects to streaming platforms via their official (or best-available) chat APIs to listen for commands. This document covers the approach, gotchas, and alternatives for each platform, as well as OBS browser source considerations.
+StreamSpin connects to streaming platforms via chat APIs or webhooks to listen for spin triggers. This document covers the approach, implementation details, and gotchas for each platform, plus OBS Browser Source considerations.
 
 ---
 
 ## OBS / Streamlabs Browser Source
 
-### How it Works
-OBS and Streamlabs both embed a Chromium browser engine for Browser Sources. Any URL you enter is loaded in this embedded Chromium instance, which renders HTML/CSS/JS just like a regular browser.
+### How It Works
+OBS and Streamlabs embed a Chromium browser engine for Browser Sources. The overlay page at `http://localhost:3000/wheel` is loaded in this embedded Chromium instance — full HTML/CSS/JS, WebSockets included.
 
-### Serving the Overlay
-StreamSpin runs a local Express server. The overlay page at `http://localhost:3000/wheel` is entered as the Browser Source URL. This avoids all `file://` protocol restrictions (which block WebSockets, fetch calls, and CORS entirely).
+### URL to Use
+`http://localhost:3000/wheel` — always this URL, both in dev and production.
 
-### Key Settings for OBS Browser Source
-- **Width**: 1920, **Height**: 1080 (or match stream resolution)
-- **Custom CSS**: `body { background: transparent !important; }` (or leave blank — the page does this itself)
-- **Shutdown source when not visible**: OFF — this would kill the WebSocket connection
+In dev mode, Express redirects this to `http://localhost:5173/overlay.html` (the Vite dev server). OBS Browser Source follows HTTP redirects automatically.
+
+In production (`npm run build && npm start`), Express serves `dist/overlay.html` directly.
+
+### Recommended Browser Source Settings
+- **Width**: 1920, **Height**: 1080 (or match your stream resolution)
+- **Custom CSS**: leave blank (the page sets `background: transparent` itself)
+- **Shutdown source when not visible**: **OFF** — this kills the WebSocket connection and breaks live updates
 - **Refresh browser when scene becomes active**: optional, harmless
 
-### WebSocket from Browser Source
-Chromium in OBS has no special restrictions on `ws://localhost` connections. Socket.io works without any configuration changes. The overlay page connects to `ws://localhost:3000` just as a regular browser tab would.
+### WebSockets from Browser Source
+Chromium in OBS has no special restrictions on `ws://localhost` connections. Socket.io works without any configuration changes.
 
-### Streamlabs vs OBS
-Both use Chromium. Streamlabs Desktop is Electron-based and may have a slightly older Chromium version. Target ES2020 for maximum compatibility.
+### Streamlabs vs OBS Studio
+Both use embedded Chromium. Target ES2020+ syntax for maximum compatibility. No known differences that affect StreamSpin.
 
-### Gotcha: Multiple Monitors / Virtual Machines
-If OBS runs inside a VM, `localhost` in the VM is not the host machine. Streamers running OBS in a VM will need to use the host machine's local IP instead. Document this clearly in the setup guide.
+### Gotcha: VMs and Remote OBS
+If OBS runs inside a VM or on a separate machine, `localhost` in that environment is not the host machine. Streamers in this setup must use the host machine's local network IP instead (e.g. `http://192.168.x.x:3000/wheel`). The server currently only binds to `127.0.0.1` — binding to `0.0.0.0` would be needed for this use case but introduces a security consideration.
 
 ---
 
 ## Twitch
 
 ### Overview
-Twitch has the best-documented streaming API of the three platforms. There are two separate systems:
-1. **Chat** — IRC-based, accessed via `tmi.js`
-2. **EventSub** — webhook or WebSocket-based event system for channel events (subscriptions, channel points, etc.)
+Twitch has the most complete streaming integration API. StreamSpin uses two separate Twitch systems:
+1. **Chat** — IRC via `tmi.js`, for `!spin` style commands
+2. **EventSub** — WebSocket-based, for Channel Points redemptions
 
-### Chat — tmi.js
+### Chat — tmi.js (Phase 3)
 
-**Library**: [`tmi.js`](https://github.com/tmijs/tmi.js) (MIT licence, 3k+ stars, actively maintained)
-
+**Library**: `tmi.js` — de-facto standard Twitch IRC wrapper
 ```bash
-npm install tmi.js
-npm install @types/tmi.js -D
+npm install tmi.js && npm install -D @types/tmi.js
 ```
 
-**Connection**: Connects to `irc.chat.twitch.tv` via WebSocket (Twitch wraps IRC in WS).
+Connects to `irc.chat.twitch.tv` via WebSocket. Requires a bot account OAuth token.
 
-**Auth**: Requires a bot account with an OAuth token. Minimum scope: `chat:read` for reading only, `chat:edit` to send responses.
+**Required OAuth scopes**: `chat:read`, `chat:edit`
 
-**Setup flow**:
-1. Streamer registers a Twitch Developer Application at `dev.twitch.tv`
-2. StreamSpin redirects to Twitch OAuth (`/auth/twitch`) with scopes: `chat:read chat:edit channel:read:redemptions`
-3. Twitch redirects back with an authorization code
-4. Server exchanges code for access + refresh tokens
-5. Tokens stored in `config.json` — never exposed to browser
+**Auth flow**:
+1. Register a Twitch app at `dev.twitch.tv`
+2. Visit `http://localhost:3000/auth/twitch` in a browser (stub route exists)
+3. Server exchanges code for access + refresh tokens
+4. Tokens stored in `.env`
 
-**Rate Limits (as of 2025)**:
-- Regular bot: 20 messages per 30 seconds per channel
-- Verified bot: 500 messages per 30 seconds per channel
-- Command responses should use a cooldown to avoid hitting limits
+**Rate limits**: 20 messages/30s for regular bots. Implement cooldowns to stay well clear.
 
-**Command Parsing Best Practice**:
-```typescript
-client.on('message', (channel, tags, message, self) => {
-  if (self) return; // ignore own messages
-  if (!message.startsWith('!')) return;
-  const [command, ...args] = message.slice(1).split(' ');
-  // handle command
-});
-```
+**Permission checking**: `tags['mod']`, `tags['badges']?.broadcaster` — use these to gate moderator-only commands.
 
-**User Permission Check**: `tags['mod']`, `tags['badges']?.broadcaster` — use these to gate moderator-only commands.
+**Gotcha**: tmi.js reconnects automatically. Do not add reconnect logic on top — it causes duplicate event handlers.
 
-**Gotcha**: tmi.js reconnects automatically. Don't implement your own reconnect logic on top of it — it causes duplicate event handlers.
+### Channel Points — EventSub (Phase 3)
 
-### Channel Points — EventSub
+**Event type**: `channel.channel_points_custom_reward_redemption.add`
 
-**Approach**: Twitch's EventSub over WebSocket (introduced 2023, replaces PubSub).
+**Additional scope**: `channel:read:redemptions`, `channel:manage:redemptions`
 
-**Relevant subscription type**: `channel.channel_points_custom_reward_redemption.add`
-
-**Auth**: Requires `channel:read:redemptions` scope on the broadcaster's token.
-
-**How to get the Reward ID**: Streamers create a custom Channel Point reward in their Twitch dashboard. The Reward ID is a UUID that can be retrieved via `GET https://api.twitch.tv/helix/channel_points/custom_rewards`.
+**Getting the Reward ID**: Create the reward in the Twitch dashboard, then fetch it via `GET https://api.twitch.tv/helix/channel_points/custom_rewards`. The UUID goes in the Editor's Integrations panel.
 
 **Implementation notes**:
-- EventSub WebSocket sessions expire after ~10 minutes of inactivity — must send keepalives
-- Use Twitch's official `twitch-eventsub-ws` approach or implement the reconnect flow manually
-- Auto-fulfil redemptions via `PATCH /helix/channel_points/custom_rewards/redemptions` to avoid a queue backlog
+- EventSub WebSocket sessions need keepalives every ~10 minutes
+- Auto-fulfil redemptions via `PATCH /helix/channel_points/custom_rewards/redemptions` to clear the queue
 
-**Alternative**: StreamElements/Streamlabs bots can relay channel point events via their own webhooks, but this adds a dependency.
-
-### Recommended OAuth Scopes
+### Full OAuth Scope List
 ```
 chat:read
 chat:edit
 channel:read:redemptions
 channel:manage:redemptions
-moderator:read:chat_settings
 ```
 
 ---
@@ -108,126 +90,124 @@ moderator:read:chat_settings
 ## Kick
 
 ### Overview
-Kick is a newer platform (launched 2022) with a rapidly evolving and not fully documented API. As of Q1 2026, there is **no official bot API** with OAuth, but chat is readable without authentication.
+Kick has no official public bot API as of Q1 2026. Rather than implementing a fragile reverse-engineered integration, StreamSpin uses **Botrix** as a bridge.
 
-### Chat Reading — Pusher WebSocket
+### Recommended Approach: Botrix Bridge
 
-Kick uses [Pusher](https://pusher.com) as their WebSocket infrastructure for chat delivery. This is discoverable by inspecting Kick's network traffic in a browser.
+[Botrix](https://botrix.live) is a chatbot that officially supports Kick and allows **custom JavaScript** in command handlers. It runs as an Electron app (Node.js runtime), so `fetch()` to `localhost` works without restriction.
 
-**Library**: `pusher-js` (official Pusher client — works in Node.js and browser)
+**Setup:**
 
-```bash
-npm install pusher-js
-```
+1. Install Botrix and connect it to your Kick channel
+2. Create a `!spin` command in Botrix
+3. Set the action to **Custom JavaScript** with this snippet:
 
-**Connection**:
-```typescript
-import Pusher from 'pusher-js';
-
-const pusher = new Pusher('32cbd69e4b950bf97679', {
-  cluster: 'us2',
-  forceTLS: true,
-});
-
-const channel = pusher.subscribe(`chatrooms.${chatroomId}.v2`);
-channel.bind('App\\Events\\ChatMessageEvent', (data) => {
-  // data.content is the message text
-  // data.sender.username is the sender
-  // data.sender.is_moderator for mod check
+```javascript
+fetch('http://localhost:3000/api/trigger', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ secret: 'YOUR_WEBHOOK_SECRET', triggeredBy: 'kick:' + username })
 });
 ```
 
-**Getting the Chatroom ID**: Fetch `https://kick.com/api/v1/channels/{channelSlug}` — the response includes `chatroom.id`. This does NOT require authentication.
+4. Paste your `WEBHOOK_SECRET` from StreamSpin's `.env` into the snippet
 
-**Gotcha**: The Pusher app key `32cbd69e4b950bf97679` and cluster `us2` are Kick's own Pusher credentials — they appear to be stable but are technically undocumented. If Kick changes them, the integration breaks until updated.
+**Why this works:**
+- Botrix handles all Kick authentication, reconnection, and command parsing
+- StreamSpin only needs its existing `POST /api/trigger` endpoint — same one used by Stream Deck and manual triggers
+- No Kick-specific code needed in StreamSpin
+- Botrix handles bot chat responses itself — configure them in Botrix
 
-**Limitations**:
-- **Read-only** — no official way to send messages as a bot to Kick chat without a full browser session
-- Cannot send chat responses without browser automation (Puppeteer) — avoid this approach (ToS risk)
-- No channel points or redemption system as of Q1 2026
+**Limitation**: Botrix must be running alongside StreamSpin. Document this dependency clearly in the setup guide (Phase 3 editor panel).
 
-### Kick Official API (v2)
-Kick announced an official API program in 2024. As of Q1 2026:
-- There is a `kick.com/api/v2` with some public endpoints
-- OAuth for bots is in limited beta (apply at `kick.com/developers`)
-- Check [kick.com/developers](https://kick.com/developers) for current status before implementation
-
-### Workaround for Chat Responses
-If you need to send chat messages from Kick, options are:
-1. **Wait for official bot API** (recommended)
-2. **Manual notifications** — use StreamSpin's on-screen display instead of chat responses
-3. **Nightbot/StreamElements** — these bots have unofficial Kick support; StreamSpin could trigger them via their APIs
+### Kick Official API (Status)
+Kick launched an official API program in 2024. As of Q1 2026, OAuth for bots is in limited beta. Monitor [kick.com/developers](https://kick.com/developers) — if a stable API ships, a native integration can be added without changing the StreamSpin architecture (just implement the integration module interface).
 
 ---
 
 ## OnlyFans
 
-### Overview
-OnlyFans does not have a public API for live streaming or chat integration as of Q1 2026. Their platform is primarily content-gated and not designed for third-party integrations.
+### Status
+OnlyFans has no public API for live streaming, chat, or tip events as of Q1 2026.
 
-### What Doesn't Work (and Why)
-- **No official live stream API** — OnlyFans live streams are browser-only
-- **No chat bot API** — chat is read/write only through the web UI
-- **Browser automation (Puppeteer)** — technically possible but: violates ToS, unstable, session management is fragile, and risks account bans
-- **Reverse-engineering the API** — possible but legally grey and will break on any platform update
+### Why Browser Automation Is Not an Option
+Some tools attempt Puppeteer-based scraping of the OnlyFans web UI:
+- Violates OnlyFans ToS (risk of account suspension)
+- Fragile — breaks on any UI update
+- Session management is unreliable
+- Not a supportable integration path
 
-### Recommended Approach: Manual Webhook Trigger
-For OnlyFans streamers, the recommended workflow is:
+### Recommended Workflow for OnlyFans Streamers
+1. Keep the StreamSpin Editor open in a browser tab during streams
+2. Use the **Test Spin** button (or the sidebar "Spin Now" button — Phase 3) to trigger manually in response to tips/subscriptions
+3. Alternatively, map a **Stream Deck** button to `POST /api/trigger` via the Web Requests plugin
 
-1. Streamer keeps StreamSpin's Editor open in a browser tab during their stream
-2. The **"Spin Now"** button in the Editor triggers a spin immediately
-3. Alternatively, a physical **Elgato Stream Deck** button can call `POST /api/trigger` via the Stream Deck Web Requests plugin
-
-This is actually ergonomically fine for OnlyFans streams — most OF streamers trigger spins manually in response to tips/subscriptions anyway, which they read from the OF UI.
+This is ergonomically appropriate for OF streams — streamers are already watching the OF UI for tip notifications.
 
 ### Future
-Monitor `onlyfans.com/developers` (does not currently exist) and the OF community for any API announcements. The integration module is stubbed out in `src/integrations/onlyfans/` as a webhook receiver, ready to be extended.
+If OnlyFans introduces a public events API, the integration module stub at `src/integrations/` is ready to be filled in.
+
+---
+
+## Webhook / Stream Deck
+
+### POST /api/trigger
+
+Universal spin trigger. Any tool that can make an HTTP POST can fire the wheel.
+
+```bash
+curl -X POST http://localhost:3000/api/trigger \
+  -H "Content-Type: application/json" \
+  -d '{"secret": "YOUR_WEBHOOK_SECRET", "triggeredBy": "stream-deck"}'
+```
+
+**Body fields:**
+- `secret` — must match `WEBHOOK_SECRET` in `.env` (if unset, any POST is accepted)
+- `triggeredBy` — optional label shown in spin-complete logs (e.g. `"twitch:username"`, `"kick:username"`, `"webhook"`)
+
+**Response:** `{ "ok": true, "queued": true }`
+
+### Stream Deck Setup
+1. Install the **Web Requests** plugin from the Elgato Marketplace (free)
+2. Add a button → Web Requests action
+3. URL: `http://localhost:3000/api/trigger`
+4. Method: POST
+5. Header: `Content-Type: application/json`
+6. Body: `{"secret": "YOUR_WEBHOOK_SECRET"}`
+
+Stream Deck integration is the recommended trigger method for OnlyFans streamers.
 
 ---
 
 ## Third-Party Aggregators
 
-These services sit between the streaming platforms and StreamSpin and can simplify multi-platform integration:
-
-### Streamlabs Cloudbot
-- Has a chat API that works across Twitch, YouTube, and (unofficially) Kick
-- Supports custom API calls from chatbot commands
-- A Streamlabs command could call `POST /api/trigger` on StreamSpin
-- **Limitation**: Adds a dependency on Streamlabs account and internet connection
+These services provide a unified chat API across platforms and can relay triggers to StreamSpin via the webhook endpoint.
 
 ### StreamElements
-- Similar to Streamlabs — supports Twitch, YouTube, Kick
-- Has a WebSocket-based "overlay" system — theoretically a StreamElements overlay event could be forwarded to StreamSpin
-- More dev-friendly API documentation than Streamlabs
+- REST API at `api.streamelements.com/kappa/v2/`
+- Supports Twitch and YouTube natively, Kick unofficially
+- Custom overlay widgets can call external APIs — a StreamElements widget could call `POST /api/trigger`
+
+### Streamlabs
+- Similar to StreamElements for multi-platform support
+- Less actively maintained API
 
 ### Recommendation
-For **Phase 3**, implement native Twitch and Kick integrations first (most streamers are on one or both). Document the StreamElements/Streamlabs webhook approach as an advanced option for multi-platform streamers. This avoids adding external service dependencies to the core tool.
-
----
-
-## Stream Deck Integration
-
-Elgato Stream Deck users can trigger spins without any StreamSpin UI interaction:
-
-1. Install the **Web Requests** plugin (free, from Elgato Marketplace)
-2. Create a button action: POST to `http://localhost:3000/api/trigger`
-3. Set header `Content-Type: application/json` and body `{"secret": "YOUR_WEBHOOK_SECRET"}`
-
-This is worth documenting prominently — Stream Decks are near-universal among professional streamers.
+Implement native Twitch integration first (Phase 3). StreamElements/Streamlabs webhook approach is a documented advanced option for users who already use those platforms, not a primary integration path.
 
 ---
 
 ## Summary Table
 
-| Feature | Twitch | Kick | OnlyFans |
-|---|---|---|---|
-| Chat reading | ✅ Official (tmi.js) | ✅ Unofficial (Pusher) | ❌ |
-| Chat writing (bot responses) | ✅ Official (tmi.js) | ❌ No official API | ❌ |
-| Channel Points / Rewards | ✅ EventSub | ❌ | ❌ |
-| OAuth / Auth | ✅ Full OAuth 2.0 | Partial (beta) | ❌ |
-| Trigger via webhook | ✅ | ✅ | ✅ (only option) |
-| Stability | High | Medium | N/A |
-| Implementation complexity | Medium | Low (read-only) | Trivial |
+| Platform | Chat trigger | Bot responses | Auth | Stability |
+|---|---|---|---|---|
+| Twitch chat | `tmi.js` (Phase 3) | ✅ tmi.js | OAuth 2.0 | High |
+| Twitch Channel Points | EventSub (Phase 3) | Auto-fulfil | OAuth 2.0 | High |
+| Kick | Botrix bridge | Botrix handles it | Botrix handles it | High (Botrix-dependent) |
+| OnlyFans | — | — | — | N/A |
+| Webhook (any) | `POST /api/trigger` | — | Shared secret | High |
+| Stream Deck | Web Requests plugin | — | Shared secret | High |
+| StreamElements | Custom widget → webhook | — | StreamElements auth | Medium |
 
 ---
 
@@ -235,8 +215,9 @@ This is worth documenting prominently — Stream Decks are near-universal among 
 
 - Twitch Dev Portal: `dev.twitch.tv`
 - Twitch EventSub Docs: `dev.twitch.tv/docs/eventsub`
+- Twitch Channel Points API: `dev.twitch.tv/docs/api/reference/#get-custom-reward`
 - tmi.js GitHub: `github.com/tmijs/tmi.js`
+- Botrix: `botrix.live`
 - Kick Dev Portal: `kick.com/developers`
-- Pusher JS Docs: `pusher.com/docs/channels/getting_started/javascript`
-- OBS Browser Source Docs: `obsproject.com/wiki/Sources-Guide#browser-source`
+- OBS Browser Source: `obsproject.com/wiki/Sources-Guide#browser-source`
 - Elgato Web Requests Plugin: Elgato Marketplace

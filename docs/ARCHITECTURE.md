@@ -2,7 +2,7 @@
 
 ## Overview
 
-StreamSpin is a **local-first** tool. It runs entirely on the streamer's machine. There is no cloud component. The architecture has three layers:
+StreamSpin is a **local-first** tool. It runs entirely on the streamer's machine — no cloud, no accounts, no subscription. The architecture has three layers:
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -24,7 +24,6 @@ StreamSpin is a **local-first** tool. It runs entirely on the streamer's machine
 │                         │                           │
 │              ┌──────────▼──────────┐                │
 │              │   Socket Bridge     │                │
-│              │  (socketBridge.ts)  │                │
 │              │  + Spin Queue       │                │
 │              └──────────┬──────────┘                │
 │                         │ Socket.io                  │
@@ -34,9 +33,8 @@ StreamSpin is a **local-first** tool. It runs entirely on the streamer's machine
           ▼                                ▼
 ┌──────────────────────┐      ┌────────────────────────┐
 │  EDITOR UI           │      │  WHEEL OVERLAY          │
-│  http://localhost:   │      │  http://localhost:3000/ │
-│  3000/ (prod)        │      │  wheel (always)         │
-│  5173/ (dev)         │      │                         │
+│  localhost:5173 (dev)│      │  localhost:3000/wheel   │
+│  localhost:3000 (prod│      │  (always this URL)      │
 │  React 18 + Vite     │      │  Vanilla TS + Canvas    │
 │  No wheel dep        │      │  No React               │
 └──────────────────────┘      └────────────────────────┘
@@ -46,11 +44,11 @@ StreamSpin is a **local-first** tool. It runs entirely on the streamer's machine
 
 ## Why Local-First?
 
-1. **No cloud costs** — this is a free tool, no hosting bill
+1. **No cloud costs** — free tool, no hosting bill
 2. **Low latency** — wheel spins within milliseconds of a chat command
-3. **Privacy** — OAuth tokens never leave the user's machine
-4. **Reliability** — works offline (manual trigger mode)
-5. **Simplicity** — no auth server, no backend deployment
+3. **Privacy** — OAuth tokens never leave the machine
+4. **Reliability** — works fully offline (manual trigger mode)
+5. **Simplicity** — no backend deployment, no auth server
 
 ---
 
@@ -58,43 +56,55 @@ StreamSpin is a **local-first** tool. It runs entirely on the streamer's machine
 
 ```
 streamspin/
-├── index.html              ← Vite entry: editor app
-├── overlay.html            ← Vite entry: OBS overlay
+├── index.html              Vite entry: editor app
+├── overlay.html            Vite entry: OBS overlay (no React)
 ├── src/
 │   ├── app/                React editor UI
+│   │   ├── App.tsx         Root — config state, debounced save, socket
+│   │   ├── index.css       Tailwind base + component classes
 │   │   ├── main.tsx        React entry point
-│   │   ├── App.tsx         Root component
-│   │   ├── index.css       Tailwind base styles + component classes
+│   │   ├── lib/
+│   │   │   ├── configApi.ts   fetch/save/import/export config via REST
+│   │   │   └── constants.ts   SEGMENT_COLORS, FONTS, EASING_OPTIONS, generateId
 │   │   └── components/
-│   │       └── WheelPreview.tsx   Live canvas preview (Phase 1)
-│   ├── wheel/              Pure renderer — NO React, NO DOM API except Canvas
+│   │       ├── WheelPreview.tsx    Live canvas preview (same renderer as overlay)
+│   │       ├── PresetManager.tsx   Named wheel preset save/load/delete UI
+│   │       ├── panels/
+│   │       │   ├── SegmentsPanel.tsx
+│   │       │   ├── AppearancePanel.tsx
+│   │       │   ├── PointerPanel.tsx
+│   │       │   ├── SpinSettingsPanel.tsx
+│   │       │   └── ResultPanel.tsx
+│   │       └── ui/
+│   │           ├── Panel.tsx       Collapsible section wrapper
+│   │           ├── Slider.tsx
+│   │           ├── ColorInput.tsx
+│   │           ├── Toggle.tsx
+│   │           ├── NumberInput.tsx
+│   │           └── Select.tsx
+│   ├── wheel/              Pure renderer — NO React, NO DOM except Canvas
 │   │   ├── renderer.ts     renderFrame(ctx, config, layout, rotation)
 │   │   ├── physics.ts      computeSegmentLayout, createSpinAnimation, tickAnimation
-│   │   └── pointers.ts     SVG-drawn pointer presets (arrow, pin, triangle, gem, hand)
+│   │   └── pointers.ts     Canvas-drawn pointer presets + rotation helpers
 │   ├── overlay/
-│   │   └── main.ts         OBS overlay entry — Socket.io + render loop
+│   │   └── main.ts         OBS overlay entry — Socket.io + rAF render loop
 │   ├── server/
 │   │   ├── index.ts        Express app + Socket.io server
 │   │   ├── configStore.ts  Atomic read/write of config.json
+│   │   ├── presetsStore.ts Atomic read/write of presets.json
 │   │   ├── socketBridge.ts Spin queue + event routing
 │   │   └── routes/
 │   │       ├── config.ts   GET/POST /api/config
-│   │       ├── trigger.ts  POST /api/trigger (webhook + Stream Deck)
-│   │       └── auth.ts     /auth/twitch OAuth flow (Phase 3)
+│   │       ├── trigger.ts  POST /api/trigger (webhook / Stream Deck)
+│   │       ├── presets.ts  CRUD /api/presets + /api/presets/:id/load
+│   │       └── auth.ts     /auth/twitch OAuth (Phase 3)
 │   ├── integrations/       Platform chat connectors (Phase 3)
-│   │   ├── twitch/
-│   │   └── manual/
+│   │   └── twitch/
 │   └── types/              Shared types — imported by app, server, overlay
 │       ├── config.ts       WheelConfig master schema + DEFAULT_CONFIG
 │       └── events.ts       Typed Socket.io event maps
-├── public/                 Static assets (Vite copies as-is)
-│   └── assets/
-│       ├── pointers/       Future: raster pointer exports
-│       └── sounds/         Future: spin/win audio files
-├── docs/
-│   ├── ARCHITECTURE.md     This file
-│   └── INTEGRATIONS.md     Platform integration research
-├── dist/                   Production build output (gitignored)
+├── public/assets/          Static assets (Vite copies as-is)
+├── dist/                   Production build (gitignored)
 │   ├── index.html          Editor app
 │   └── overlay.html        OBS overlay
 └── dist-server/            Compiled server (gitignored)
@@ -105,20 +115,21 @@ streamspin/
 ## The Two Pages
 
 ### Editor (`/`)
-A full React 18 app built by Vite. Used by the streamer to configure the wheel during their session. Communicates with the server via:
-- `GET/POST /api/config` — load and save config
-- `POST /api/trigger` — manual test spin
-- Socket.io — live spin preview, config-update push, integration status
+A React 18 app compiled by Vite. Loaded by the streamer during their session. Config state lives entirely in `App.tsx` — the editor does **not** react to `config-update` socket events after initial load, avoiding feedback loops with the server.
 
-The `WheelPreview` component uses an identical render pipeline to the OBS overlay. What you see in the editor is exactly what viewers see.
+Communication with the server:
+- `GET /api/config` — initial config load on mount
+- `POST /api/config` — 400ms debounced auto-save on every change
+- `GET/POST/PUT/DELETE /api/presets` — preset management
+- Socket.io — test spin events, future integration status
 
 ### Overlay (`/wheel`)
-A minimal Vite-compiled page. No React. Contains one `<canvas>` and one result `<div>`. Loaded into OBS as a Browser Source.
+A minimal Vite-compiled page — no React, no framework. Contains one `<canvas>` and one result `<div>`. Loaded into OBS as a Browser Source and left running.
 
-- Loads config via `config-update` socket event on connect
-- Runs a `requestAnimationFrame` loop continuously (no idle state)
-- Responds to `spin` events — starts animation, emits `spin-complete` when done
-- Shows result overlay for `result.duration` ms after each spin
+- On connect: receives current config via `config-update`
+- Runs a continuous `requestAnimationFrame` loop (no idle state, always 60fps)
+- Responds to `spin` events: starts animation, plays audio, shows result overlay, emits `spin-complete`
+- Responds to `config-update`: replaces config and recomputes segment layout
 
 ---
 
@@ -130,101 +141,168 @@ A minimal Vite-compiled page. No React. Contains one `<canvas>` and one result `
 function renderFrame(
   ctx: CanvasRenderingContext2D,
   config: WheelConfig,
-  layout: SegmentLayout[],
-  rotation: number  // current wheel rotation in radians
+  layout: SegmentLayout[],    // pre-computed from computeSegmentLayout()
+  rotation: number            // current wheel rotation in radians
 ): void
 ```
 
-Called every animation frame (60fps target). Zero side effects, zero internal state.
+**Zero side effects. Zero internal state.** Called every animation frame at 60fps.
 
-`layout` is pre-computed from `computeSegmentLayout(segments)` and only recalculated when the segment list changes — not every frame.
+`layout` is computed once per segment change via `computeSegmentLayout(segments)`, not on every frame.
 
 ### Rendering order (painter's algorithm)
 1. Clear canvas
-2. Glow shadow (if enabled) via `ctx.shadowBlur`
-3. Segment arcs (fill + inner border)
+2. Glow shadow (`ctx.shadowBlur`) — if enabled
+3. Segment arcs (fill + inner separator stroke)
 4. Clear glow
 5. Outer wheel border
-6. Hub (centre circle + sheen gradient)
-7. Segment labels (radial text, rotated with each segment)
-8. Pointer (drawn at wheel edge; rotated to face inward)
+6. Hub (circle + sheen radial gradient)
+7. Segment labels (radial text, rotated to face outward)
+8. Pointer (positioned at wheel edge, rotated inward)
 
 ### Pointer system
-Pointer shapes are defined in `src/wheel/pointers.ts` as canvas drawing functions. Each preset draws a shape **pointing RIGHT (+x)** in local space. `getPointerRotation(position)` returns the `ctx.rotate()` angle needed to make it face inward from any of the four positions.
+All five presets are drawn in `src/wheel/pointers.ts` as canvas drawing functions in **pointing-right (+x) orientation**. `getPointerRotation(position)` returns the `ctx.rotate()` value needed to make any preset face inward from any of the four positions. `getPointerOrigin(position, radius, gap)` returns the (x, y) placement offset.
+
+This means adding a new preset requires only adding one drawing function — no geometry changes elsewhere.
 
 ---
 
 ## Spin Physics
 
-`src/wheel/physics.ts` handles all animation math.
+`src/wheel/physics.ts` — all animation maths, no DOM dependency.
 
 ### Winner selection
-Segments are weighted. `createSpinAnimation` picks a random winner proportional to `segment.weight`, then calculates a `targetAngle` that places the winner's midpoint exactly under the pointer, plus N full rotations (random between `rotationsMin` and `rotationsMax`).
+`createSpinAnimation()` picks a weighted-random winner, then calculates `targetAngle` to land that segment's midpoint precisely under the pointer, plus N full rotations (random within the configured min/max range).
+
+```
+targetAngle = currentAngle + ((pointerAngle - winner.mid) mod 2π) + rotations × 2π
+```
 
 ### Easing
-Three built-in functions: `ease-out-cubic`, `ease-out-quint`, `ease-out-expo`. All decelerate to a smooth stop. The bounce mode overshoots by a small amount at the end of the spin.
+`tickAnimation(anim, now)` returns `{ angle, progress, complete }` each frame.
+Three built-in curves: `ease-out-cubic`, `ease-out-quint`, `ease-out-expo`. Bounce applies a small sinusoidal overshoot in the final 15% of the animation.
 
-### Animation loop
+---
+
+## Config & Preset Storage
+
+Two JSON files, both gitignored, both written atomically (write `.tmp` → rename):
+
+### `config.json` — active wheel config
+Managed by `configStore.ts`. Written on every `POST /api/config`. When loading a preset, the preset's config is written here and broadcast to overlay clients.
+
+### `presets.json` — named wheel snapshots
+```typescript
+interface PresetsFile {
+  presets: Array<{
+    id: string          // UUID
+    name: string        // user-defined name
+    config: WheelConfig // full snapshot
+    savedAt: string     // ISO timestamp
+  }>
+}
 ```
-createSpinAnimation() → SpinAnimation object
-    ↓  (each frame)
-tickAnimation(anim, now) → { angle, progress, complete }
-    ↓  (when complete)
-getWinnerLayout() → SegmentLayout of winning segment
+Managed by `presetsStore.ts`. The list endpoint (`GET /api/presets`) omits the full config for performance. `POST /api/presets/:id/load` writes to `config.json` and broadcasts `config-update` to overlay clients in one operation.
+
+---
+
+## Config Schema
+
+`src/types/config.ts` is the single source of truth. Key sections:
+
+```typescript
+interface WheelConfig {
+  version: number
+  wheel: WheelAppearance      // border, hub, font, glow, shadow
+  segments: Segment[]         // label, color, textColor, weight, enabled
+  pointer: PointerConfig      // preset, customImageDataUrl, position, scale, colorTint
+  spin: SpinPhysics           // duration range, rotations range, easing, bounce
+  result: ResultDisplay       // win overlay — message, colors, font, duration
+  sound: SoundConfig          // spin/win audio dataUrls + volumes
+  commands: CommandConfig[]   // chat command definitions (Phase 3)
+  removeWinnerMode: boolean
+  integrations: {
+    twitch: TwitchConfig
+    kick: KickConfig          // Botrix bridge — no direct connection needed
+    webhook: WebhookConfig
+  }
+}
 ```
 
 ---
 
 ## Socket.io Event Contract
 
-All event types are defined in `src/types/events.ts` using Socket.io's typed generics.
+Typed in `src/types/events.ts`.
 
 ### Server → Client
 
-| Event | Payload | Description |
+| Event | Payload | Who receives it |
 |---|---|---|
-| `spin` | `{ triggeredBy: string }` | Initiate a spin (from queue) |
-| `config-update` | `{ config: WheelConfig }` | Push config to editor + overlay |
-| `chat-message` | `{ platform, username, message, timestamp }` | Chat feed for editor |
-| `integration-status` | `{ platform, status, message? }` | Connection state indicator |
-| `spin-queue` | `{ queueLength: number }` | Queue depth update |
+| `spin` | `{ triggeredBy: string }` | Overlay + Editor (preview) |
+| `config-update` | `{ config: WheelConfig }` | Overlay only (on connect + after preset load) |
+| `chat-message` | `{ platform, username, message, timestamp }` | Editor only (Phase 3) |
+| `integration-status` | `{ platform, status, message? }` | Editor only (Phase 3) |
+| `spin-queue` | `{ queueLength: number }` | All |
 
 ### Client → Server
 
-| Event | Payload | Description |
+| Event | Payload | Sender |
 |---|---|---|
-| `spin-complete` | `{ winner: Segment, triggeredBy: string }` | Overlay/editor reports winner |
-| `editor-spin` | — | Editor "Test Spin" button |
+| `spin-complete` | `{ winner: Segment, triggeredBy: string }` | Overlay or Editor preview |
+| `editor-spin` | — | Editor (Test Spin button) |
 
 ---
 
 ## Spin Queue
 
-`src/server/socketBridge.ts` manages a simple FIFO queue. When multiple chat commands arrive while a spin is in progress, they are queued and executed sequentially. The overlay emits `spin-complete` when done, which pops the next item.
+`src/server/socketBridge.ts` manages a FIFO queue of pending spins. When a spin arrives while one is in progress, it is queued. The overlay emits `spin-complete` when animation finishes, which pops the next item.
 
 ```
-Command arrives → enqueueSpin()
+Trigger arrives → enqueueSpin()
                        ↓
-           if spinning: push to queue
-           if idle:     emit 'spin' immediately
+           spinning?  push to queue
+           idle?      emit 'spin' immediately, set spinning=true
                        ↓
     overlay emits 'spin-complete'
                        ↓
-           processQueue() → emit next 'spin' or set idle
+           spinning=false → processQueue()
 ```
+
+---
+
+## Config Flow (Editor ↔ Server ↔ Overlay)
+
+```
+User changes setting in panel
+    ↓
+setConfig(newConfig) in App.tsx
+    ↓ (immediate)
+WheelPreview re-renders via configRef — live preview
+    ↓ (400ms debounce)
+POST /api/config
+    ↓
+configStore.writeConfig() — writes config.json atomically
+    ↓
+io.sockets.sockets.forEach → emit 'config-update' to overlay clients only
+    ↓
+OBS overlay re-renders on next frame
+```
+
+The editor never listens to incoming `config-update` events after the initial load — it manages its own React state. This prevents feedback loops.
 
 ---
 
 ## Vite Build Setup
 
-Two entry points in `vite.config.ts` `rollupOptions.input`:
+Two entry points in `vite.config.ts`:
 
 | Entry | Source | Output | Served at |
 |---|---|---|---|
 | `main` | `index.html` | `dist/index.html` | `/` |
 | `overlay` | `overlay.html` | `dist/overlay.html` | `/wheel` |
 
-Both entries share `src/types/` and `src/wheel/` code. Vite tree-shakes them independently, so the overlay bundle contains no React code.
+Both share `src/types/` and `src/wheel/`. Vite tree-shakes independently — the overlay bundle contains no React code.
 
 ---
 
@@ -233,89 +311,44 @@ Both entries share `src/types/` and `src/wheel/` code. Vite tree-shakes them ind
 ### Development (`npm run dev`)
 ```
 concurrently:
-  ├── vite dev server     (port 5173) — serves editor + overlay HTML
-  └── tsx watch           (port 3000) — Express server + Socket.io
+  ├── Vite dev server (port 5173) — editor + overlay HTML, HMR
+  └── tsx watch       (port 3000) — Express server + Socket.io
 
-OBS Browser Source: http://localhost:3000/wheel
-  └── Express redirects → http://localhost:5173/overlay.html
-      └── Vite serves overlay.html (with HMR for dev)
-
-Editor: http://localhost:5173
-  └── /socket.io proxied → localhost:3000
-  └── /api/*     proxied → localhost:3000
+Editor:  http://localhost:5173
+Overlay: http://localhost:3000/wheel → Express redirects → Vite:5173/overlay.html
+         OBS Browser Source follows the redirect automatically.
+/api/* and /socket.io proxied by Vite to localhost:3000
 ```
 
 ### Production (`npm run build && npm start`)
 ```
-vite build → dist/index.html + dist/overlay.html
-tsc -p tsconfig.server.json → dist-server/
+vite build       → dist/index.html + dist/overlay.html
+tsc server build → dist-server/
 
 Express (port 3000):
   GET /        → dist/index.html
   GET /wheel   → dist/overlay.html
-  GET /api/*   → configRouter / triggerRouter
+  GET /api/*   → routers
   WS           → Socket.io
 ```
 
 ---
 
-## Config Schema
-
-`src/types/config.ts` is the single source of truth. Key top-level sections:
-
-```typescript
-interface WheelConfig {
-  version: number             // schema version (increment on breaking changes)
-  wheel: WheelAppearance      // colours, fonts, glow, border, hub
-  segments: Segment[]         // label, color, textColor, weight, enabled
-  pointer: PointerConfig      // preset, customImageDataUrl, position, scale
-  spin: SpinPhysics           // duration, rotations, easing, bounce
-  result: ResultDisplay       // win overlay text, colours, duration
-  sound: SoundConfig          // spin/win audio, volume
-  commands: CommandConfig[]   // chat command definitions
-  removeWinnerMode: boolean
-  integrations: {
-    twitch: TwitchConfig
-    kick: KickConfig           // Botrix bridge — no direct connection
-    webhook: WebhookConfig
-  }
-}
-```
-
-Config is persisted as `config.json` (gitignored). Written atomically via `configStore.ts` (write `.tmp` → `rename`). Created from `DEFAULT_CONFIG` if absent.
-
----
-
-## Integration Architecture
-
-### Twitch (Phase 3)
-- `tmi.js` IRC connection for chat commands
-- EventSub WebSocket for Channel Points
-- OAuth token stored in `.env` (never in browser)
-- Command cooldown tracked in memory (Map<userId, timestamp>)
-
-### Kick (Botrix bridge)
-Kick requires no native implementation. The streamers set up a Botrix command that calls `POST /api/trigger`. StreamSpin only needs its existing webhook endpoint.
-
-### Webhook / Stream Deck / Manual
-`POST /api/trigger` with `{ secret, triggeredBy? }` body. Secret validated server-side. This is the universal trigger — any tool that can make an HTTP POST can fire the wheel.
-
----
-
 ## Authentication
 
-### Twitch
+### Twitch (Phase 3)
 - OAuth 2.0 Authorization Code flow
 - Server-side token exchange at `/auth/twitch/callback`
-- Tokens stored in `.env` (server reads on startup)
-- Automatic refresh before expiry
+- Access + refresh tokens stored in `.env`
+- Server auto-refreshes before expiry
 
 ### Kick
-- No OAuth — Botrix handles authentication externally
+- No OAuth required — Botrix handles Kick authentication externally
+- StreamSpin only exposes `POST /api/trigger`
 
-### Webhook
+### Webhook / Stream Deck
 - Shared secret in `WEBHOOK_SECRET` env var
-- If unset, endpoint accepts any POST (dev convenience)
+- If unset, any POST is accepted (dev convenience — set it in production)
 
 ---
 
@@ -323,9 +356,9 @@ Kick requires no native implementation. The streamers set up a Botrix command th
 
 - Server binds to `127.0.0.1` — not LAN/internet accessible
 - Webhook endpoint validates `WEBHOOK_SECRET` when set
-- OAuth tokens never leave the server process (not in browser, not in logs)
-- `config.json` and `.env` are gitignored
-- No external data transmission; all processing is local
+- OAuth tokens never leave the server process
+- `config.json`, `presets.json`, and `.env` are all gitignored
+- No external data transmission — all processing is local
 
 ---
 
@@ -335,9 +368,9 @@ Kick requires no native implementation. The streamers set up a Botrix command th
 |---|---|
 | Overlay page load time | < 500ms |
 | Chat command → spin latency | < 100ms |
-| Canvas render FPS (spin) | 60fps |
-| Canvas render FPS (idle) | 60fps (continuous loop) |
-| Config save latency | < 50ms |
+| Canvas render FPS (spin + idle) | 60fps |
+| Config save round-trip | < 50ms |
+| Preset load → overlay update | < 200ms |
 | Server memory footprint | < 100MB |
 | Overlay tab memory | < 150MB |
 
@@ -347,19 +380,13 @@ Kick requires no native implementation. The streamers set up a Botrix command th
 
 ### Development
 ```bash
-npm run dev
-# → concurrently: Vite (5173) + tsx watch (3000)
-# Editor:  http://localhost:5173
-# Overlay: http://localhost:3000/wheel (redirects to Vite)
+npm run dev   # Vite (5173) + tsx watch (3000)
 ```
 
 ### Production
 ```bash
-npm run build   # Vite → dist/ + tsc → dist-server/
-npm start       # node dist-server/server/index.js
-# Editor:  http://localhost:3000
-# Overlay: http://localhost:3000/wheel
+npm run build && npm start
 ```
 
-### Future: Electron
-Server runs as Electron main process. Editor opens as `BrowserWindow`. Overlay is still served via localhost for OBS compatibility — Electron `BrowserWindow` cannot be used as an OBS Browser Source.
+### Phase 4: Electron
+Server runs as Electron main process. Editor opens as `BrowserWindow`. Overlay is still served via localhost — Electron `BrowserWindow` cannot be used as an OBS Browser Source directly.
