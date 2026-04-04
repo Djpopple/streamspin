@@ -1,19 +1,41 @@
 import { Router } from 'express'
+import type { Server } from 'socket.io'
 import { readConfig, writeConfig } from '../configStore.js'
 import type { WheelConfig } from '../../types/config.js'
+import type {
+  ServerToClientEvents,
+  ClientToServerEvents,
+  InterServerEvents,
+  SocketData,
+} from '../../types/events.js'
 
-export const configRouter = Router()
+type IO = Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>
 
-configRouter.get('/', (_req, res) => {
-  res.json(readConfig())
-})
+export function configRouter(io: IO): Router {
+  const router = Router()
 
-configRouter.post('/', (req, res) => {
-  const body = req.body as WheelConfig
-  if (typeof body !== 'object' || body === null || body.version === undefined) {
-    res.status(400).json({ error: 'Invalid config body' })
-    return
-  }
-  writeConfig(body)
-  res.json({ ok: true })
-})
+  router.get('/', (_req, res) => {
+    res.json(readConfig())
+  })
+
+  router.post('/', (req, res) => {
+    const body = req.body as WheelConfig
+    if (typeof body !== 'object' || body === null || body.version === undefined) {
+      res.status(400).json({ error: 'Invalid config body' })
+      return
+    }
+    writeConfig(body)
+
+    // Push config to overlay clients only.
+    // The editor manages its own state locally after the initial load.
+    io.sockets.sockets.forEach((socket) => {
+      if (socket.data.clientType === 'overlay') {
+        socket.emit('config-update', { config: body })
+      }
+    })
+
+    res.json({ ok: true })
+  })
+
+  return router
+}
