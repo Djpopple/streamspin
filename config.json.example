@@ -1,0 +1,4 @@
+{
+  "_comment": "Copy this file to config.json. It will be created automatically on first server start.",
+  "_note": "config.json is gitignored — never commit it as it may contain tokens."
+}

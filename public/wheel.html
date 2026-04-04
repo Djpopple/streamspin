@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StreamSpin Overlay</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        width: 100%; height: 100%;
+        background: transparent;
+        overflow: hidden;
+      }
+      #canvas-container {
+        width: 100%; height: 100%;
+        display: flex; align-items: center; justify-content: center;
+      }
+      canvas { display: block; }
+
+      #result-overlay {
+        position: fixed; inset: 0;
+        display: none;
+        align-items: center; justify-content: center;
+        z-index: 10;
+      }
+      #result-overlay.visible { display: flex; }
+      #result-text {
+        padding: 24px 48px;
+        border-radius: 16px;
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
+        text-align: center;
+        animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+      @keyframes pop {
+        from { transform: scale(0.5); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="canvas-container">
+      <canvas id="wheel-canvas"></canvas>
+    </div>
+    <div id="result-overlay">
+      <div id="result-text"></div>
+    </div>
+
+    <!-- Socket.io served by the Express server -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="module" src="/wheel-overlay.js"></script>
+  </body>
+</html>
