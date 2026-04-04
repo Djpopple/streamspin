@@ -35,6 +35,20 @@ export function setupSocketBridge(io: IO): void {
       spinning = false
       processQueue(io)
     })
+
+    // If a client disconnects while a spin is in flight (e.g. editor page refresh),
+    // reset the spinning flag after a short grace period so the queue doesn't jam.
+    socket.on('disconnect', () => {
+      if (!spinning) return
+      setTimeout(() => {
+        const sockets = io.sockets.sockets
+        const anyConnected = [...sockets.values()].some(s => s.connected)
+        if (!anyConnected) {
+          spinning = false
+          spinQueue.length = 0
+        }
+      }, 3000)
+    })
   })
 }
 

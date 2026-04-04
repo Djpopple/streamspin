@@ -29,6 +29,7 @@ export function WheelPreview({ config, socket, size = 480 }: Props) {
   // Keep mutable refs so the animation loop always sees the latest values
   // without needing to restart the loop on every config change.
   const configRef = useRef(config)
+  const socketRef = useRef(socket)    // keeps socket fresh inside the rAF closure
   const layoutRef = useRef<SegmentLayout[]>(computeSegmentLayout(config.segments))
   const animRef = useRef<SpinAnimation | null>(null)
   const rotationRef = useRef(0)
@@ -41,6 +42,10 @@ export function WheelPreview({ config, socket, size = 480 }: Props) {
       preloadCustomPointer(config.pointer.customImageDataUrl)
     }
   }, [config])
+
+  useEffect(() => {
+    socketRef.current = socket
+  }, [socket])
 
   // Single render loop — started once, never restarted
   useEffect(() => {
@@ -64,7 +69,7 @@ export function WheelPreview({ config, socket, size = 480 }: Props) {
           const winner = getWinnerLayout(layoutRef.current, anim.targetAngle, pAngle)
           const winnerSegment = configRef.current.segments[winner.index]
 
-          socket?.emit('spin-complete', {
+          socketRef.current?.emit('spin-complete', {
             winner: winnerSegment,
             triggeredBy: triggeredByRef.current,
           })
