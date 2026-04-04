@@ -11,6 +11,7 @@ import { AppearancePanel } from './components/panels/AppearancePanel'
 import { PointerPanel } from './components/panels/PointerPanel'
 import { SpinSettingsPanel } from './components/panels/SpinSettingsPanel'
 import { ResultPanel } from './components/panels/ResultPanel'
+import { IntegrationsPanel } from './components/panels/IntegrationsPanel'
 
 type AppSocket = Socket<ServerToClientEvents, ClientToServerEvents>
 type SaveStatus = 'saved' | 'saving' | 'error'
@@ -205,11 +206,17 @@ function App() {
               onChange={result => patchConfig('result', result)}
             />
 
-            {/* Placeholder for Phase 3 */}
-            <div className="panel opacity-40">
-              <p className="text-sm font-semibold text-white/60">Integrations</p>
-              <p className="text-xs text-white/30 mt-1">Twitch, Kick, Webhook — Phase 3</p>
-            </div>
+            <IntegrationsPanel
+              config={config}
+              socket={socket}
+              onChange={(integrations, commands) => {
+                setConfig(prev => ({
+                  ...prev,
+                  integrations,
+                  ...(commands ? { commands } : {}),
+                }))
+              }}
+            />
           </div>
         </aside>
 

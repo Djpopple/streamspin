@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import type { Server } from 'socket.io'
 import { readConfig, writeConfig } from '../configStore.js'
+import { notifyConfigUpdate } from '../integrationManager.js'
 import type { WheelConfig } from '../../types/config.js'
 import type {
   ServerToClientEvents,
@@ -25,6 +26,7 @@ export function configRouter(io: IO): Router {
       return
     }
     writeConfig(body)
+    notifyConfigUpdate(body)
 
     // Push config to overlay clients only.
     // The editor manages its own state locally after the initial load.
