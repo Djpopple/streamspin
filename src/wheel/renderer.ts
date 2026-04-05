@@ -165,38 +165,38 @@ function drawLabels(
 ): void {
   const { globalFont, globalFontSize } = config.wheel
 
+  const weight = config.wheel.labelBold ? 'bold' : 'normal'
+  const style  = config.wheel.labelItalic ? 'italic' : 'normal'
+
   for (const seg of layout) {
     const segment = config.segments[seg.index]
     const midAngle = rotation + seg.mid
     const font = segment.fontOverride ?? globalFont
-    const fontSize = Math.max(10, Math.min(globalFontSize, (seg.span * radius) / 3.5))
+
+    // All labels sit at the same fixed radius so they're equidistant from
+    // the centre. Per-segment offset shifts in/out from this baseline.
+    const textX = radius * (0.35 + (segment.labelRadiusOffset ?? 0))
+
+    // Chord width available at textX (80% of full chord to leave breathing room).
+    const availableWidth = 2 * textX * Math.sin(seg.span / 2) * 0.80
+
+    // Measure at the global font size, then scale down proportionally to fit.
+    // Narrow segments get smaller text; wide segments get full-size text.
+    ctx.font = `${style} ${weight} ${globalFontSize}px ${font}`
+    const measuredWidth = ctx.measureText(segment.label).width
+    const scaleFactor = Math.min(1, availableWidth / measuredWidth)
+    const fontSize = Math.max(9, Math.floor(globalFontSize * scaleFactor))
 
     ctx.save()
     ctx.translate(cx, cy)
     ctx.rotate(midAngle)
-
-    // Text runs from inner hub outward.
-    // Base is 30%; wider segments push outward automatically (up to +15%) so
-    // large segments don't look empty and narrow ones don't crowd the rim.
-    const autoOffset = Math.min(0.15, Math.max(0, (seg.span - 0.3) * 0.2))
-    const textX = radius * (0.30 + autoOffset + (segment.labelRadiusOffset ?? 0))
     ctx.translate(textX, 0)
 
-    // Clamp text to available width
-    const maxWidth = radius * 0.82 - config.wheel.hubSize
-
-    const weight = config.wheel.labelBold ? 'bold' : 'normal'
-    const style  = config.wheel.labelItalic ? 'italic' : 'normal'
     ctx.font = `${style} ${weight} ${fontSize}px ${font}`
     ctx.fillStyle = segment.textColor
     ctx.textAlign = 'left'
     ctx.textBaseline = 'middle'
-
-    if (ctx.measureText(segment.label).width > maxWidth) {
-      ctx.fillText(segment.label, 0, 0, maxWidth)
-    } else {
-      ctx.fillText(segment.label, 0, 0)
-    }
+    ctx.fillText(segment.label, 0, 0)
 
     ctx.restore()
   }
