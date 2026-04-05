@@ -38,8 +38,9 @@ export function renderFrame(
   const cy = height / 2
   const radius = Math.min(width, height) / 2 - (config.wheel.framePadding ?? 56)
 
-  // Clear + background
+  // Clear + background (before save so clearRect always uses full canvas coords)
   ctx.clearRect(0, 0, width, height)
+  ctx.save()  // ← top-level guard: any leaked transform can't survive to next frame
   if (config.wheel.backgroundColor !== 'transparent') {
     ctx.fillStyle = config.wheel.backgroundColor
     ctx.fillRect(0, 0, width, height)
@@ -47,6 +48,7 @@ export function renderFrame(
 
   if (layout.length === 0) {
     drawEmptyState(ctx, cx, cy, radius, config)
+    ctx.restore()
     return
   }
 
@@ -61,6 +63,7 @@ export function renderFrame(
   drawLabels(ctx, config, layout, cx, cy, radius, rotation)
   drawPointer(ctx, config, cx, cy, radius)
   drawFrame(ctx, config, width, height)
+  ctx.restore()  // ← matches top-level save
 }
 
 // ── Segments ──────────────────────────────────────────────────────────────────

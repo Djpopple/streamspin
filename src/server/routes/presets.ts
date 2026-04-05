@@ -8,6 +8,7 @@ import {
   deletePreset,
 } from '../presetsStore.js'
 import { writeConfig } from '../configStore.js'
+import { migrateConfig } from '../migration.js'
 import type { WheelConfig } from '../../types/config.js'
 import type {
   ServerToClientEvents,
@@ -62,13 +63,14 @@ export function presetsRouter(io: IO): Router {
   router.post('/:id/load', (req, res) => {
     const preset = getPreset(req.params.id)
     if (!preset) { res.status(404).json({ error: 'Not found' }); return }
-    writeConfig(preset.config)
+    const config = migrateConfig(preset.config)
+    writeConfig(config)
     io.sockets.sockets.forEach(socket => {
       if (socket.data.clientType === 'overlay') {
-        socket.emit('config-update', { config: preset.config })
+        socket.emit('config-update', { config })
       }
     })
-    res.json({ ok: true, config: preset.config })
+    res.json({ ok: true, config })
   })
 
   return router
