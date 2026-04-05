@@ -28,13 +28,17 @@ export function exportConfig(config: WheelConfig): void {
 export function importConfig(file: File): Promise<WheelConfig> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const parsed = JSON.parse(e.target?.result as string) as WheelConfig
         if (!Array.isArray(parsed.segments) || parsed.segments.length === 0) {
           throw new Error('Not a valid StreamSpin config')
         }
-        resolve(parsed)
+        // Save through the server so migration fills any missing fields,
+        // then read back the fully-populated config.
+        await saveConfig(parsed)
+        const migrated = await fetchConfig()
+        resolve(migrated)
       } catch (err) {
         reject(err)
       }
