@@ -16,6 +16,7 @@ import { triggerRouter } from './routes/trigger.js'
 import { presetsRouter } from './routes/presets.js'
 import { authRouter } from './routes/auth.js'
 import { integrationsRouter } from './routes/integrations.js'
+import { historyRouter } from './routes/history.js'
 import { setupSocketBridge } from './socketBridge.js'
 import { initIntegrationManager } from './integrationManager.js'
 
@@ -47,6 +48,7 @@ app.use('/api/config', configRouter(io))
 app.use('/api/trigger', triggerRouter(io))
 app.use('/api/presets', presetsRouter(io))
 app.use('/api/integrations', integrationsRouter)
+app.use('/api/history', historyRouter(io))
 app.use('/auth', authRouter)
 
 const distPath = path.join(__dirname, '../../dist')

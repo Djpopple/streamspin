@@ -12,6 +12,7 @@ import { PointerPanel } from './components/panels/PointerPanel'
 import { SpinSettingsPanel } from './components/panels/SpinSettingsPanel'
 import { ResultPanel } from './components/panels/ResultPanel'
 import { IntegrationsPanel } from './components/panels/IntegrationsPanel'
+import { HistoryPanel } from './components/panels/HistoryPanel'
 
 type AppSocket = Socket<ServerToClientEvents, ClientToServerEvents>
 type SaveStatus = 'saved' | 'saving' | 'error'
@@ -243,6 +244,8 @@ function App() {
                 }))
               }}
             />
+
+            <HistoryPanel socket={socket} />
           </div>
         </aside>
 

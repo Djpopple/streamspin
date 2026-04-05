@@ -53,6 +53,7 @@ src/
         SpinSettingsPanel.tsx
         ResultPanel.tsx
         IntegrationsPanel.tsx
+        HistoryPanel.tsx    Win history — per-row remove/edit, live socket updates
       ui/
         Panel.tsx       Collapsible section (default closed)
         Slider.tsx      Defaults value=0 to guard against undefined
@@ -75,7 +76,8 @@ src/
     configStore.ts      Atomic read/write of config.json
     migration.ts        migrateConfig() — deep-merges all sub-objects against DEFAULT_CONFIG
     presetsStore.ts     Atomic read/write of presets.json
-    socketBridge.ts     Spin queue + socket event routing
+    historyStore.ts     In-memory win history + history.json persistence (capped at 200)
+    socketBridge.ts     Spin queue + socket event routing + win recording
     tokenStore.ts       Twitch OAuth tokens + auto-refresh
     integrationManager.ts  Twitch chat + EventSub lifecycle
     routes/
@@ -83,6 +85,7 @@ src/
       trigger.ts        POST /api/trigger (webhook + Stream Deck)
       presets.ts        CRUD /api/presets + POST /api/presets/:id/load (runs migration)
       auth.ts           /auth/twitch OAuth flow
+      history.ts        GET/DELETE /api/history, DELETE/PATCH /api/history/:id
 
   integrations/
     twitch/
@@ -102,10 +105,11 @@ src/
 
 2. **The editor does not listen to `config-update` socket events after initial load.** It manages its own state locally and debounce-saves via REST. The server pushes `config-update` only to overlay clients (`socket.data.clientType === 'overlay'`).
 
-3. **Config is stored in two files, both gitignored:**
+3. **Persistent data is stored in three gitignored files:**
    - `config.json` — the currently active wheel config
    - `presets.json` — named snapshots (`{ id, name, config, savedAt }[]`)
-   - Both are written atomically (write `.tmp` → rename)
+   - `history.json` — win records (`WinRecord[]`, newest-first, capped at 200)
+   - All are written atomically (write `.tmp` → rename)
 
 4. **The server always binds to `127.0.0.1`.** Never change this to `0.0.0.0`.
 
@@ -143,7 +147,7 @@ Per-segment `labelRadiusOffset` shifts the fixed base position inward/outward an
 
 - Do not store OAuth tokens in the browser. Tokens go in `tokens.json`, managed server-side.
 - Do not make the wheel renderer depend on React or any framework.
-- Do not add a database. `config.json` and `presets.json` are the only persistence.
+- Do not add a database. `config.json`, `presets.json`, and `history.json` are the only persistence.
 - Do not break the editor ↔ overlay separation. They communicate only via Socket.io and REST.
 - Do not auto-commit or push. Always confirm with the user before any git operations.
 - Do not co-author commits — commits are attributed to the user only.
@@ -177,6 +181,9 @@ Per-segment `labelRadiusOffset` shifts the fixed base position inward/outward an
 | `src/server/socketBridge.ts` | Spin queue + event routing |
 | `src/server/configStore.ts` | Atomic config.json read/write |
 | `src/server/presetsStore.ts` | Atomic presets.json read/write |
+| `src/server/historyStore.ts` | In-memory win history + history.json persistence |
+| `src/server/routes/history.ts` | Win history REST API |
+| `src/app/components/panels/HistoryPanel.tsx` | Win history editor UI |
 | `src/app/App.tsx` | Config state, debounced save, socket, keyboard shortcut |
 | `src/app/components/PresetManager.tsx` | Preset UI + localStorage persistence |
 | `src/app/components/WheelPreview.tsx` | Editor canvas preview + result overlay |
@@ -225,3 +232,4 @@ OBS overlay: `http://localhost:3000/wheel` (always this URL, even in dev)
 - All panels collapsed by default
 - Themed preset files in presets/ folder
 - CC Zoinks font wired via @font-face from public/assets/fonts/
+- Win history panel (historyStore.ts + HistoryPanel.tsx) — persisted, live socket updates, per-row remove and inline edit

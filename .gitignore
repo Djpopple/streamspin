@@ -6,6 +6,7 @@ node_modules/
 config.json
 presets.json
 tokens.json
+history.json
 
 # Build output
 dist/

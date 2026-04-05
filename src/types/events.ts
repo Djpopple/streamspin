@@ -30,6 +30,16 @@ export interface SpinQueueEvent {
   queueLength: number
 }
 
+// ── Win History ───────────────────────────────────────────────────────────────
+
+export interface WinRecord {
+  id: string
+  label: string
+  color: string
+  timestamp: number
+  triggeredBy: string
+}
+
 // ── Client → Server ──────────────────────────────────────────────────────────
 
 export interface SpinCompleteEvent {
@@ -46,6 +56,10 @@ export interface ServerToClientEvents {
   'chat-message': (event: ChatMessageEvent) => void
   'integration-status': (event: IntegrationStatusEvent) => void
   'spin-queue': (event: SpinQueueEvent) => void
+  'win-recorded': (event: WinRecord) => void
+  'win-removed': (event: { id: string }) => void
+  'win-updated': (event: WinRecord) => void
+  'history-cleared': () => void
 }
 
 // Events emitted by clients, received by the server

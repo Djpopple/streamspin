@@ -81,6 +81,17 @@ Legend: `[x]` = done, `[ ]` = todo, `[-]` = deferred / won't do this phase
 
 ---
 
+## Phase 4b — Quality of Life ✅
+- [x] **Win History panel** — records every spin result with label, colour swatch, timestamp, triggered-by
+  - [x] Persisted to `history.json` (gitignored, capped at 200 entries)
+  - [x] Live updates via socket — no refresh needed
+  - [x] Per-row remove (mark as claimed) with hover-reveal ✕ button
+  - [x] Inline edit — click ✎ to correct label or viewer name, Enter to save, Escape to cancel
+  - [x] Clear all button
+  - [x] REST API: `GET/DELETE /api/history`, `DELETE /api/history/:id`, `PATCH /api/history/:id`
+
+---
+
 ## Phase 5 — Distribution (Next)
 - [ ] Electron wrapper — bundle server + editor into single `.exe` / `.dmg`
 - [ ] Auto-updater (Electron)
@@ -89,7 +100,7 @@ Legend: `[x]` = done, `[ ]` = todo, `[-]` = deferred / won't do this phase
 ---
 
 ## Backlog / Future
-- [ ] Confetti / particle effects on win
+- [ ] Segment images — per-segment icon/PNG rendered inside the arc
 - [ ] Animated segment backgrounds (GIF/video fills)
 - [ ] Viewer-submitted entry queue (`!addme`)
 - [ ] TikTok / YouTube Live integration

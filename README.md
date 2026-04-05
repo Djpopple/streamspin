@@ -30,6 +30,15 @@ A fully customisable, browser-source-ready spin wheel for live streamers on Twit
 - Active preset remembered across page reloads (no accidental duplicates)
 - Timestamps show when each preset was last saved
 
+### Win History
+- Every spin result is recorded — label, colour swatch, timestamp, and who triggered it (Twitch username, webhook, etc.)
+- Persists across restarts (`history.json`, capped at 200 entries)
+- Live updates in the editor as spins complete — no refresh needed
+- Hover any row to reveal **edit** (✎) and **remove** (✕) actions
+  - Edit: correct the prize label or viewer name inline, Enter to save
+  - Remove: mark the prize as claimed and remove it from the list
+- Clear all button to reset history
+
 ### Result Overlay
 - Configurable win message with `{winner}` placeholder
 - Background colour, opacity, font, size, and text colour
@@ -218,7 +227,7 @@ fetch('http://localhost:3000/api/trigger', {
 
 ## Roadmap
 
-Phases 0–4 complete. Next: Phase 5 — Electron packaging into a single `.exe`.
+Phases 0–4 complete including win history. Next: Phase 5 — Electron packaging into a single `.exe`.
 
 See [TODO.md](TODO.md) for the full breakdown.
 

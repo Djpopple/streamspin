@@ -10,6 +10,8 @@ import type {
   SpinEvent,
 } from '../types/events.js'
 import { readConfig } from './configStore.js'
+import { addWin } from './historyStore.js'
+import { randomUUID } from 'crypto'
 
 type IO = Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>
 
@@ -29,9 +31,21 @@ export function setupSocketBridge(io: IO): void {
       enqueueSpin(io, { triggeredBy: 'editor' })
     })
 
-    // Overlay reports spin complete — process next in queue
+    // Overlay reports spin complete — record win and process next in queue
     socket.on('spin-complete', (event) => {
       console.log(`Spin complete — winner: ${event.winner.label} (triggered by ${event.triggeredBy})`)
+      const record = {
+        id: randomUUID(),
+        label: event.winner.label,
+        color: event.winner.color,
+        timestamp: Date.now(),
+        triggeredBy: event.triggeredBy,
+      }
+      addWin(record)
+      // Push to editor clients only (overlay doesn't need history)
+      for (const s of io.sockets.sockets.values()) {
+        if (s.data.clientType === 'editor') s.emit('win-recorded', record)
+      }
       spinning = false
       processQueue(io)
     })
