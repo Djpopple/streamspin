@@ -175,8 +175,8 @@ function drawLabels(
     ctx.translate(cx, cy)
     ctx.rotate(midAngle)
 
-    // Text runs from inner hub outward; base position at 35% of radius (+/- per-segment offset)
-    const textX = radius * (0.35 + (segment.labelRadiusOffset ?? 0))
+    // Text runs from inner hub outward; base position at 30% of radius (+/- per-segment offset)
+    const textX = radius * (0.30 + (segment.labelRadiusOffset ?? 0))
     ctx.translate(textX, 0)
 
     // Clamp text to available width
