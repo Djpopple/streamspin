@@ -7,17 +7,18 @@ A fully customisable, browser-source-ready spin wheel for live streamers on Twit
 ## Features
 
 ### Wheel Designer
-- Add, remove, reorder (drag-and-drop or arrows), and weight segments
+- Add, remove, drag-and-drop reorder, and weight segments
 - Per-segment colour picker (10-colour palette + full hex input)
 - Per-segment advanced options: text colour, gradient fill, font override, label position offset
-- Global font selector — 16 fonts including Inter, Bebas Neue, Bangers, Times New Roman, Ravie, Bradley Hand ITC, and more
+- Smart label sizing — all labels sit at the same radius; font scales automatically so wide segments get bigger text and narrow segments get smaller text, everything stays inside the wheel
+- Global font selector — 17 fonts including Inter, Bebas Neue, Bangers, Times New Roman, Ravie, Bradley Hand ITC, CC Zoinks, and more
 - Bold / italic label style toggles
 - Border, hub, glow, drop shadow, and background colour controls
 - Frame ring width control (reserves space for artist frame overlays)
 - Frame overlay upload — drop a transparent PNG designed by your artist on top of the wheel
 
 ### Pointer / Indicator
-- Five built-in presets drawn with real canvas previews: Arrow, Triangle, Pin, Gem, Hand
+- Five built-in presets: Arrow, Triangle, Pin, Gem, Hand (live canvas previews)
 - Import your own PNG/JPG pointer image (auto-resized to 256px)
 - Custom pointer rotation: snap buttons (−90°, −45°, +45°, +90°) + full 360° slider
 - Position: top, right, bottom, left
@@ -26,14 +27,14 @@ A fully customisable, browser-source-ready spin wheel for live streamers on Twit
 ### Multiple Wheel Presets
 - Save unlimited named wheel configurations
 - Switch between wheels instantly — OBS overlay updates live
+- Active preset remembered across page reloads (no accidental duplicates)
 - Timestamps show when each preset was last saved
-- Update or delete individual presets
 
 ### Result Overlay
 - Configurable win message with `{winner}` placeholder
 - Background colour, opacity, font, size, and text colour
 - Adjustable display duration
-- Pop-in animation — shown in both the editor preview and the OBS overlay
+- Pop-in animation shown in both the editor preview and the OBS overlay
 
 ### Platform Integrations
 
@@ -92,6 +93,25 @@ npm run dev
 | `http://localhost:5173` | Editor UI |
 | `http://localhost:3000/wheel` | OBS Browser Source (always this URL) |
 
+### Clean Restart
+Press `Ctrl+C` in the terminal then run `npm run dev` again. Config is re-read and migrated on every startup.
+
+---
+
+## Themed Preset Files
+
+Ready-to-import wheel configs live in the [`presets/`](presets/) folder. Import any via the **Import** button in the editor header.
+
+| File | Palette | Font | Vibe |
+|---|---|---|---|
+| `halloween.json` | Orange / purple / black | Bebas Neue | Spooky glow, orange border |
+| `goth.json` | Deep purples / crimson / black | Bebas Neue | Slow moody spin, purple glow |
+| `cutesy.json` | Pinks / pastels / lavender | Nunito Bold | Bouncy, soft glow |
+| `cottage-core.json` | Sage / honey / dusty rose | Georgia Italic | Gentle bounce, earthy |
+| `christmas.json` | Red / green / gold | Bebas Neue | Gold glow, festive bounce |
+
+All have placeholder segment labels — swap them for your prizes and hit **Update**.
+
 ---
 
 ## Frame Artwork Spec
@@ -102,13 +122,15 @@ For artists creating frame overlays or custom pointers:
 - Square canvas at your target resolution (e.g. 800×800px)
 - Transparent centre — the wheel renders behind the frame
 - Design vines, cogs, borders etc. in the outer ring
-- Use "Frame ring width" in Appearance to control how much space the ring gets (default 56px, up to 160px)
+- Use "Frame ring width" in Appearance to control ring size (default 56px, up to 160px)
 - Export as PNG with alpha
 
 **Custom pointer PNG:**
 - 64×64px recommended (auto-resized on import)
 - Tip pointing **right** (3 o'clock) — StreamSpin rotates it to the correct position
 - Use the rotation controls in the Pointer panel to fine-tune
+
+Drop font files (`.ttf` / `.woff2`) into [`public/assets/fonts/`](public/assets/fonts/) and ask Claude to wire up the `@font-face` rule.
 
 ---
 
@@ -118,34 +140,35 @@ For artists creating frame overlays or custom pointers:
 streamspin/
 ├── index.html              ← Vite entry: editor app
 ├── overlay.html            ← Vite entry: OBS overlay
+├── presets/                ← Ready-to-import themed wheel configs
+├── public/
+│   └── assets/fonts/       ← Drop custom font files here
 ├── src/
 │   ├── app/                React editor UI
 │   │   ├── components/
-│   │   │   ├── panels/     Settings panels (Segments, Appearance, Pointer, Spin, Result, Integrations)
-│   │   │   ├── ui/         Reusable primitives (Slider, Toggle, ColorInput, Select, …)
+│   │   │   ├── panels/     Segments, Appearance, Pointer, Spin, Result, Integrations
+│   │   │   ├── ui/         Slider, Toggle, ColorInput, Select, Panel, …
 │   │   │   ├── PresetManager.tsx
 │   │   │   └── WheelPreview.tsx
 │   │   └── lib/            configApi, constants
 │   ├── wheel/              Pure Canvas renderer — no React dependency
-│   │   ├── renderer.ts     renderFrame + frame/pointer image caches
+│   │   ├── renderer.ts     renderFrame, smart label sizing, frame/pointer caches
 │   │   ├── physics.ts      Spin animation, winner detection, easing
 │   │   └── pointers.ts     Five canvas-drawn pointer presets
 │   ├── overlay/            OBS overlay entry (vanilla TS)
 │   ├── server/             Express + Socket.io backend
 │   │   ├── routes/         config, trigger, presets, auth
-│   │   ├── configStore.ts  Atomic config.json read/write + migration
-│   │   ├── migration.ts    Schema migration for old configs
+│   │   ├── configStore.ts  Atomic config.json read/write
+│   │   ├── migration.ts    Schema migration — runs on every config read + preset load + import
 │   │   ├── presetsStore.ts Atomic presets.json read/write
 │   │   ├── socketBridge.ts Spin queue + event routing
-│   │   ├── tokenStore.ts   Twitch token storage + auto-refresh
+│   │   ├── tokenStore.ts   Twitch OAuth token storage + auto-refresh
 │   │   └── integrationManager.ts  Twitch chat + EventSub lifecycle
 │   ├── integrations/
-│   │   └── twitch/         chat.ts + eventsub.ts
-│   └── types/              Shared TypeScript types
+│   │   └── twitch/         chat.ts (tmi.js) + eventsub.ts (native WS)
+│   └── types/
 │       ├── config.ts       Master WheelConfig schema + DEFAULT_CONFIG
 │       └── events.ts       Socket.io event maps
-├── public/
-│   └── assets/fonts/       Drop custom font files here (.ttf / .woff2)
 ├── docs/
 │   ├── ARCHITECTURE.md
 │   └── INTEGRATIONS.md
@@ -153,9 +176,6 @@ streamspin/
 ├── CLAUDE.md
 └── TODO.md
 ```
-
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for full technical details.
-See [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) for platform setup guides.
 
 ---
 
@@ -175,7 +195,7 @@ Channel Points redemptions auto-trigger a spin when a configured reward is redee
 
 ## Kick Integration
 
-Kick has no public bot API. The recommended approach is **Botrix**:
+Kick has no public bot API. Use **Botrix**:
 1. Install [Botrix](https://botrix.live) and connect it to your Kick channel
 2. Create a `!spin` command with this custom JS:
 ```javascript
@@ -185,8 +205,6 @@ fetch('http://localhost:3000/api/trigger', {
   body: JSON.stringify({ secret: 'YOUR_WEBHOOK_SECRET' })
 });
 ```
-
-See [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) for full details.
 
 ---
 
@@ -200,7 +218,9 @@ See [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) for full details.
 
 ## Roadmap
 
-See [TODO.md](TODO.md) for the full phased task breakdown. Phases 0–4 are complete. Phase 5 is Electron packaging.
+Phases 0–4 complete. Next: Phase 5 — Electron packaging into a single `.exe`.
+
+See [TODO.md](TODO.md) for the full breakdown.
 
 ---
 

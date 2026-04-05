@@ -6,6 +6,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import type { WheelConfig } from '../types/config.js'
 import { DEFAULT_CONFIG } from '../types/config.js'
+import { migrateConfig } from './migration.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const CONFIG_PATH = path.join(__dirname, '../../config.json')
@@ -20,7 +21,8 @@ export function readConfig(): WheelConfig {
     return DEFAULT_CONFIG
   }
   const raw = fs.readFileSync(CONFIG_PATH, 'utf-8')
-  cached = JSON.parse(raw) as WheelConfig
+  const migrated = migrateConfig(JSON.parse(raw))
+  cached = migrated
   return cached
 }
 

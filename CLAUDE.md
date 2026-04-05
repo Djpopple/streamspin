@@ -34,74 +34,97 @@ Do **not** introduce new major dependencies without a clear reason. This is a lo
 ```
 index.html              Vite entry: React editor app
 overlay.html            Vite entry: OBS overlay (vanilla TS, no React)
+presets/                Ready-to-import themed wheel JSON files
+public/assets/fonts/    Custom font files (.ttf/.woff2) served statically
 
 src/
   app/                  React editor UI
-    App.tsx             Root — config state, debounced save, socket
+    App.tsx             Root — config state, debounced save, socket, Space shortcut
     lib/
-      configApi.ts      fetch/save/import/export config
+      configApi.ts      fetch/save/import/export config (import routes through server for migration)
       constants.ts      SEGMENT_COLORS, FONTS, EASING_OPTIONS, generateId
     components/
-      WheelPreview.tsx  Live canvas preview (same renderer as overlay)
-      PresetManager.tsx Named wheel preset save/load/delete UI
-      panels/           One file per settings panel
-        SegmentsPanel.tsx
-        AppearancePanel.tsx
-        PointerPanel.tsx
+      WheelPreview.tsx  Live canvas preview + result overlay
+      PresetManager.tsx Named preset UI — persists activeId in localStorage
+      panels/
+        SegmentsPanel.tsx   Drag-and-drop, per-segment advanced options
+        AppearancePanel.tsx Bold/italic, frame overlay upload, frame ring width
+        PointerPanel.tsx    Custom pointer + rotation controls
         SpinSettingsPanel.tsx
         ResultPanel.tsx
-      ui/               Reusable primitives
-        Panel.tsx       Collapsible section wrapper
-        Slider.tsx
-        ColorInput.tsx
-        Toggle.tsx
+        IntegrationsPanel.tsx
+      ui/
+        Panel.tsx       Collapsible section (default closed)
+        Slider.tsx      Defaults value=0 to guard against undefined
+        ColorInput.tsx  Swatch + hex input; uses opacity-0 w-px h-px (not sr-only)
+        Toggle.tsx      left=off, right=on
         NumberInput.tsx
         Select.tsx
 
   wheel/                Pure renderer — NO React, NO DOM except Canvas
-    renderer.ts         renderFrame(ctx, config, layout, rotation)
+    renderer.ts         renderFrame — wrapped in ctx.save/restore guard
+                        Smart label sizing: fixed radius, font scales to chord+radial geometry
     physics.ts          computeSegmentLayout, createSpinAnimation, tickAnimation
-    pointers.ts         Canvas-drawn pointer presets (arrow/triangle/pin/gem/hand)
+    pointers.ts         Canvas-drawn pointer presets
 
   overlay/
-    main.ts             OBS overlay entry — Socket.io + rAF render loop
+    main.ts             OBS overlay entry — Socket.io + rAF loop
 
   server/
-    index.ts            Express app + Socket.io server (binds 127.0.0.1 only)
+    index.ts            Express + Socket.io (binds 127.0.0.1 only)
     configStore.ts      Atomic read/write of config.json
-    presetsStore.ts     Atomic read/write of presets.json (named wheel snapshots)
+    migration.ts        migrateConfig() — deep-merges all sub-objects against DEFAULT_CONFIG
+    presetsStore.ts     Atomic read/write of presets.json
     socketBridge.ts     Spin queue + socket event routing
+    tokenStore.ts       Twitch OAuth tokens + auto-refresh
+    integrationManager.ts  Twitch chat + EventSub lifecycle
     routes/
-      config.ts         GET/POST /api/config — broadcasts to overlay on POST
-      trigger.ts        POST /api/trigger — webhook + Stream Deck
-      presets.ts        CRUD /api/presets + POST /api/presets/:id/load
-      auth.ts           /auth/twitch OAuth stubs (Phase 3)
+      config.ts         GET/POST /api/config
+      trigger.ts        POST /api/trigger (webhook + Stream Deck)
+      presets.ts        CRUD /api/presets + POST /api/presets/:id/load (runs migration)
+      auth.ts           /auth/twitch OAuth flow
 
-  integrations/         Platform chat connectors (Phase 3)
+  integrations/
     twitch/
+      chat.ts           tmi.js — !spin, !addslice, !removeslice, per-user cooldowns
+      eventsub.ts       Native WebSocket EventSub — Channel Points, auto-fulfil
 
-  types/                Shared types — imported by app, server, and overlay
+  types/
     config.ts           WheelConfig master schema + DEFAULT_CONFIG
     events.ts           Typed Socket.io event maps
-
-public/
-  assets/               Static assets (Vite copies as-is)
 ```
 
 ---
 
 ## Critical Architecture Rules
 
-1. **The wheel renderer (`src/wheel/`) must stay framework-agnostic.** It takes a canvas context, config, layout, and rotation angle — nothing else. No React imports, no DOM access beyond Canvas. Both the editor preview and the OBS overlay use it identically.
+1. **The wheel renderer (`src/wheel/`) must stay framework-agnostic.** It takes a canvas context, config, layout, and rotation angle — nothing else. No React imports, no DOM access beyond Canvas.
 
 2. **The editor does not listen to `config-update` socket events after initial load.** It manages its own state locally and debounce-saves via REST. The server pushes `config-update` only to overlay clients (`socket.data.clientType === 'overlay'`).
 
 3. **Config is stored in two files, both gitignored:**
    - `config.json` — the currently active wheel config
-   - `presets.json` — named snapshots (array of `{ id, name, config, savedAt }`)
+   - `presets.json` — named snapshots (`{ id, name, config, savedAt }[]`)
    - Both are written atomically (write `.tmp` → rename)
 
 4. **The server always binds to `127.0.0.1`.** Never change this to `0.0.0.0`.
+
+5. **Migration runs at every entry point** — server startup (configStore.readConfig), preset load (presets route), and file import (configApi.importConfig saves then re-fetches). Never return a raw stored config without migrating it first.
+
+6. **`renderFrame` is wrapped in a top-level `ctx.save()`/`ctx.restore()`.** Any bad transform (e.g. NaN from missing config fields) cannot leak into the next frame.
+
+---
+
+## Label Rendering (Smart Auto-Sizing)
+
+All labels sit at a fixed radius (`0.35 * radius + labelRadiusOffset`). Font size is calculated per-segment using two geometric constraints:
+
+- **Angular**: `maxFontSizeAngular = 2 * textX * sin(seg.span / 2) * 0.80` — font height must fit the arc chord at the inner edge of the text
+- **Radial**: `maxRadialWidth = radius * 0.90 - textX` — text length must not exceed the rim
+
+Font starts at `min(globalFontSize, maxFontSizeAngular)`, then scales down proportionally if the measured text width exceeds `maxRadialWidth`. Result: wide segments get full-size text, narrow segments get smaller text, everything stays inside the wheel.
+
+Per-segment `labelRadiusOffset` shifts the fixed base position inward/outward and still applies on top of this auto-sizing.
 
 ---
 
@@ -110,21 +133,33 @@ public/
 - **TypeScript throughout** — no plain JS files in `src/`
 - Functional React components only, no class components
 - No `any` types without a comment explaining why
-- `src/types/config.ts` is the single source of truth — touch it first when adding new config fields
-- Integration modules (Phase 3) export `connect(config, onEvent)` and `disconnect()` — nothing else
+- `src/types/config.ts` is the single source of truth — add new config fields here first, then update `migration.ts` (deep-merge in base object), then renderer/UI
+- Integration modules export `connect(config, onEvent)` and `disconnect()` — nothing else
 - Socket events are typed via `ServerToClientEvents` / `ClientToServerEvents` in `src/types/events.ts`
 
 ---
 
 ## What NOT to Do
 
-- Do not store OAuth tokens in the browser (localStorage/cookies). Tokens go in `.env`, managed server-side.
+- Do not store OAuth tokens in the browser. Tokens go in `tokens.json`, managed server-side.
 - Do not make the wheel renderer depend on React or any framework.
 - Do not add a database. `config.json` and `presets.json` are the only persistence.
 - Do not break the editor ↔ overlay separation. They communicate only via Socket.io and REST.
 - Do not auto-commit or push. Always confirm with the user before any git operations.
 - Do not co-author commits — commits are attributed to the user only.
 - Do not bind the server to anything other than `127.0.0.1`.
+- Do not return a stored config to the client without running `migrateConfig` first.
+- Do not use `sr-only` on `<input type="color">` — use `opacity-0 w-px h-px` instead (sr-only's clip rect prevents the OS colour picker from opening).
+
+---
+
+## Adding New Config Fields
+
+1. Add to the interface in `src/types/config.ts`
+2. Add a default value to `DEFAULT_CONFIG` in `src/types/config.ts`
+3. The deep-merge in `migration.ts` handles it automatically for `wheel`, `pointer`, `spin`, `result`, `sound` sub-objects — no extra migration code needed for those
+4. For `Segment`-level fields, add explicit spread in the segment migration loop
+5. Update renderer / UI as needed
 
 ---
 
@@ -132,21 +167,20 @@ public/
 
 | File | Purpose |
 |---|---|
-| `src/types/config.ts` | Master config type + DEFAULT_CONFIG — add fields here first |
+| `src/types/config.ts` | Master config type + DEFAULT_CONFIG |
 | `src/types/events.ts` | Socket.io event contract |
-| `src/wheel/renderer.ts` | Canvas rendering engine — pure function |
-| `src/wheel/physics.ts` | Spin animation — layout, winner selection, easing |
-| `src/wheel/pointers.ts` | Canvas-drawn pointer presets |
+| `src/wheel/renderer.ts` | Canvas rendering engine — smart label sizing |
+| `src/wheel/physics.ts` | Spin animation + winner detection |
+| `src/wheel/pointers.ts` | Canvas pointer presets |
 | `src/server/index.ts` | Express + Socket.io entry point |
+| `src/server/migration.ts` | Config schema migration |
 | `src/server/socketBridge.ts` | Spin queue + event routing |
 | `src/server/configStore.ts` | Atomic config.json read/write |
 | `src/server/presetsStore.ts` | Atomic presets.json read/write |
-| `src/app/App.tsx` | Config state, debounced save, socket connection |
-| `src/app/components/PresetManager.tsx` | Named preset UI |
-| `src/app/components/WheelPreview.tsx` | Editor canvas preview |
-| `config.json` | Active runtime config (gitignored) |
-| `presets.json` | Named wheel snapshots (gitignored) |
-| `.env` | Secrets / OAuth tokens (never committed) |
+| `src/app/App.tsx` | Config state, debounced save, socket, keyboard shortcut |
+| `src/app/components/PresetManager.tsx` | Preset UI + localStorage persistence |
+| `src/app/components/WheelPreview.tsx` | Editor canvas preview + result overlay |
+| `src/app/lib/configApi.ts` | Config fetch/save/import/export |
 
 ---
 
@@ -161,49 +195,33 @@ npm run lint       # ESLint
 npm test           # Vitest
 ```
 
-In dev, the editor is at `http://localhost:5173`.  
-The OBS overlay URL is always `http://localhost:3000/wheel` (Express redirects to Vite in dev).
-
----
-
-## Testing Strategy
-
-- Unit tests (Vitest) for wheel physics and config parsing
-- Integration tests for the socket bridge with mock chat events
-- Canvas renderer: test manually in the editor preview
-- Platform integrations: test against Twitch sandbox accounts only
-
----
-
-## Environment Variables
-
-See `.env.example` for the full list. Never hardcode credentials. Never commit `.env`.
-
----
-
-## Deployment
-
-This is a **local tool**. No cloud deployment. Distribution in Phase 4 will be via Electron (bundles Node.js + the server + the editor into a single executable).
+Editor: `http://localhost:5173`
+OBS overlay: `http://localhost:3000/wheel` (always this URL, even in dev)
 
 ---
 
 ## What's Already Done (Don't Re-implement)
 
-- Named wheel presets (`presetsStore.ts` + `PresetManager.tsx`)
-- Spin queue in `socketBridge.ts` — handles multiple simultaneous triggers
-- OBS URL copy button in the editor header
-- Config import/export (JSON download/upload) in the editor header
+- Named wheel presets (presetsStore.ts + PresetManager.tsx)
+- Spin queue in socketBridge.ts
+- OBS URL copy button in editor header
+- Config import/export with server-side migration on import
 - Webhook trigger endpoint (`POST /api/trigger`) with secret auth
-- Twitch OAuth, chat (tmi.js), and EventSub (native WS) — fully wired in `integrationManager.ts`
-- Kick integration via Botrix bridge — documented in IntegrationsPanel
+- Twitch OAuth, chat (tmi.js), and EventSub — fully wired in integrationManager.ts
+- Kick integration via Botrix bridge
 - Drop shadow, glow, gradient fills, per-segment font/colour/position overrides
-- Frame overlay system (`frameImageDataUrl` + `frameEnabled` on WheelAppearance)
-- Custom pointer rotation (`customRotation` on PointerConfig)
-- Bold/italic label toggles (`labelBold`, `labelItalic` on WheelAppearance)
-- Frame ring width (`framePadding` on WheelAppearance)
-- Config migration (`src/server/migration.ts`) — called on every config read
-- Result overlay shown in editor preview (WheelPreview), not just OBS overlay
-- Slim custom scrollbar + sidebar overflow fix (`min-h-0` on flex container)
+- Frame overlay system (frameImageDataUrl + frameEnabled)
+- Custom pointer rotation (customRotation on PointerConfig)
+- Bold/italic label toggles (labelBold, labelItalic on WheelAppearance)
+- Frame ring width (framePadding on WheelAppearance)
+- Smart label auto-sizing (fixed radius + geometric font scaling)
+- Config migration at all three entry points
+- Result overlay in editor preview (WheelPreview)
+- Slim custom scrollbar + full page scroll fix (overflow hidden on html/body/#root)
 - Space bar keyboard shortcut for test spin
 - Disconnect and save-error banners
-- Drag-and-drop reordering (handle-only — does not conflict with sliders)
+- Drag-and-drop segment reordering (handle-only)
+- Active preset persisted in localStorage across reloads
+- All panels collapsed by default
+- Themed preset files in presets/ folder
+- CC Zoinks font wired via @font-face from public/assets/fonts/
