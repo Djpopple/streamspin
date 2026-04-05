@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "segments": [
+    { "id": "hw-1",  "label": "Trick!",         "color": "#ff6600", "textColor": "#1a1a1a", "weight": 2, "enabled": true },
+    { "id": "hw-2",  "label": "Treat!",          "color": "#6a0dad", "textColor": "#ffffff", "weight": 3, "enabled": true },
+    { "id": "hw-3",  "label": "BOO!",            "color": "#1a1a1a", "textColor": "#ff6600", "weight": 1, "enabled": true },
+    { "id": "hw-4",  "label": "Candy Corn",      "color": "#ffdd00", "textColor": "#1a1a1a", "weight": 2, "enabled": true },
+    { "id": "hw-5",  "label": "Ghost Prize",     "color": "#e8e8e8", "textColor": "#1a1a1a", "weight": 1, "enabled": true },
+    { "id": "hw-6",  "label": "Pumpkin Spice",   "color": "#cc4400", "textColor": "#ffffff", "weight": 2, "enabled": true },
+    { "id": "hw-7",  "label": "Witch's Brew",    "color": "#2d0a4e", "textColor": "#a855f7", "weight": 1, "enabled": true },
+    { "id": "hw-8",  "label": "Skeleton Dance",  "color": "#f5f5f5", "textColor": "#1a1a1a", "weight": 1, "enabled": true },
+    { "id": "hw-9",  "label": "Bat Attack",      "color": "#0d0d0d", "textColor": "#ff6600", "weight": 1, "enabled": true },
+    { "id": "hw-10", "label": "Spider Prize",    "color": "#4a0e0e", "textColor": "#ffdd00", "weight": 2, "enabled": true }
+  ],
+  "removeWinnerMode": false,
+  "wheel": {
+    "backgroundColor": "transparent",
+    "borderWidth": 4,
+    "borderColor": "#ff6600",
+    "hubSize": 28,
+    "hubColor": "#ff6600",
+    "globalFont": "\"Bebas Neue\", sans-serif",
+    "globalFontSize": 22,
+    "glowEnabled": true,
+    "glowColor": "#ff6600",
+    "glowIntensity": 18,
+    "shadowEnabled": true,
+    "framePadding": 56,
+    "frameEnabled": false,
+    "labelBold": false,
+    "labelItalic": false
+  },
+  "pointer": {
+    "preset": "triangle",
+    "position": "top",
+    "scale": 1.2,
+    "colorTint": "#ff6600"
+  },
+  "spin": {
+    "minDuration": 4000,
+    "maxDuration": 7000,
+    "minRotations": 5,
+    "maxRotations": 10,
+    "easing": "ease-out-expo",
+    "bounceEnabled": true,
+    "bounceIntensity": 0.3
+  },
+  "result": {
+    "enabled": true,
+    "duration": 5000,
+    "messageTemplate": "🎃 {winner} 🎃",
+    "backgroundColor": "#2d0a4e",
+    "backgroundOpacity": 0.92,
+    "font": "\"Bebas Neue\", sans-serif",
+    "fontSize": 64,
+    "textColor": "#ff6600"
+  },
+  "sound": {
+    "spinStartEnabled": false,
+    "spinStartVolume": 0.8,
+    "winEnabled": false,
+    "winVolume": 0.8
+  },
+  "integrations": { "twitch": { "enabled": false, "channel": "", "botUsername": "" }, "kick": { "enabled": false } },
+  "commands": []
+}

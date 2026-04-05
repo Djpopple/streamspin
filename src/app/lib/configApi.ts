@@ -31,7 +31,9 @@ export function importConfig(file: File): Promise<WheelConfig> {
     reader.onload = (e) => {
       try {
         const parsed = JSON.parse(e.target?.result as string) as WheelConfig
-        if (typeof parsed.version !== 'number') throw new Error('Missing version field')
+        if (!Array.isArray(parsed.segments) || parsed.segments.length === 0) {
+          throw new Error('Not a valid StreamSpin config')
+        }
         resolve(parsed)
       } catch (err) {
         reject(err)

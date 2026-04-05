@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "segments": [
+    { "id": "xm-1",  "label": "Stocking Filler", "color": "#c41e3a", "textColor": "#ffffff", "weight": 3, "enabled": true },
+    { "id": "xm-2",  "label": "Gift Wrap",        "color": "#1e5c1e", "textColor": "#ffd700", "weight": 2, "enabled": true },
+    { "id": "xm-3",  "label": "Snowflake Prize",  "color": "#ddeeff", "textColor": "#1a3a6e", "weight": 2, "enabled": true },
+    { "id": "xm-4",  "label": "Christmas Pudding","color": "#3d1a00", "textColor": "#ffd700", "weight": 1, "enabled": true },
+    { "id": "xm-5",  "label": "Nice List ✓",      "color": "#ffd700", "textColor": "#3d2000", "weight": 2, "enabled": true },
+    { "id": "xm-6",  "label": "Naughty List ✗",   "color": "#c41e3a", "textColor": "#ffffff", "weight": 1, "enabled": true },
+    { "id": "xm-7",  "label": "Hot Cocoa ♨",      "color": "#6b3a2a", "textColor": "#ffe4b5", "weight": 3, "enabled": true },
+    { "id": "xm-8",  "label": "Candy Cane",        "color": "#ffffff", "textColor": "#c41e3a", "weight": 2, "enabled": true },
+    { "id": "xm-9",  "label": "Elf Prize",         "color": "#1e5c1e", "textColor": "#ffd700", "weight": 2, "enabled": true },
+    { "id": "xm-10", "label": "Reindeer Games",    "color": "#8b4513", "textColor": "#ffd700", "weight": 1, "enabled": true }
+  ],
+  "removeWinnerMode": false,
+  "wheel": {
+    "backgroundColor": "transparent",
+    "borderWidth": 5,
+    "borderColor": "#ffd700",
+    "hubSize": 30,
+    "hubColor": "#c41e3a",
+    "globalFont": "\"Bebas Neue\", sans-serif",
+    "globalFontSize": 20,
+    "glowEnabled": true,
+    "glowColor": "#ffd700",
+    "glowIntensity": 16,
+    "shadowEnabled": true,
+    "framePadding": 56,
+    "frameEnabled": false,
+    "labelBold": false,
+    "labelItalic": false
+  },
+  "pointer": {
+    "preset": "arrow",
+    "position": "top",
+    "scale": 1.2,
+    "colorTint": "#ffd700"
+  },
+  "spin": {
+    "minDuration": 4000,
+    "maxDuration": 8000,
+    "minRotations": 5,
+    "maxRotations": 10,
+    "easing": "ease-out-quint",
+    "bounceEnabled": true,
+    "bounceIntensity": 0.4
+  },
+  "result": {
+    "enabled": true,
+    "duration": 5000,
+    "messageTemplate": "🎄 {winner} 🎄",
+    "backgroundColor": "#1e5c1e",
+    "backgroundOpacity": 0.93,
+    "font": "\"Bebas Neue\", sans-serif",
+    "fontSize": 62,
+    "textColor": "#ffd700"
+  },
+  "sound": {
+    "spinStartEnabled": false,
+    "spinStartVolume": 0.8,
+    "winEnabled": false,
+    "winVolume": 0.8
+  },
+  "integrations": { "twitch": { "enabled": false, "channel": "", "botUsername": "" }, "kick": { "enabled": false } },
+  "commands": []
+}

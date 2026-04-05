@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "segments": [
+    { "id": "cc-1",  "label": "Wildflower",      "color": "#a3b18a", "textColor": "#1a2e0a", "weight": 2, "enabled": true },
+    { "id": "cc-2",  "label": "Honey Jar",        "color": "#d4a017", "textColor": "#3a2000", "weight": 2, "enabled": true },
+    { "id": "cc-3",  "label": "Mushroom Magic",   "color": "#c4956a", "textColor": "#2e1500", "weight": 1, "enabled": true },
+    { "id": "cc-4",  "label": "Pressed Flower",   "color": "#e8d5b7", "textColor": "#3a2800", "weight": 2, "enabled": true },
+    { "id": "cc-5",  "label": "Berry Picking",    "color": "#8b4a6b", "textColor": "#f5e6ef", "weight": 2, "enabled": true },
+    { "id": "cc-6",  "label": "Fresh Bread",      "color": "#d4956a", "textColor": "#2e1500", "weight": 3, "enabled": true },
+    { "id": "cc-7",  "label": "Morning Dew",      "color": "#7a9e7e", "textColor": "#0d2010", "weight": 2, "enabled": true },
+    { "id": "cc-8",  "label": "Lavender Nap",     "color": "#b8a9c9", "textColor": "#1e1030", "weight": 1, "enabled": true }
+  ],
+  "removeWinnerMode": false,
+  "wheel": {
+    "backgroundColor": "transparent",
+    "borderWidth": 3,
+    "borderColor": "#a3b18a",
+    "hubSize": 26,
+    "hubColor": "#d4a017",
+    "globalFont": "Georgia, serif",
+    "globalFontSize": 18,
+    "glowEnabled": false,
+    "glowColor": "#a3b18a",
+    "glowIntensity": 10,
+    "shadowEnabled": true,
+    "framePadding": 56,
+    "frameEnabled": false,
+    "labelBold": false,
+    "labelItalic": true
+  },
+  "pointer": {
+    "preset": "arrow",
+    "position": "top",
+    "scale": 1.0,
+    "colorTint": "#a3b18a"
+  },
+  "spin": {
+    "minDuration": 4000,
+    "maxDuration": 7000,
+    "minRotations": 4,
+    "maxRotations": 8,
+    "easing": "ease-out-cubic",
+    "bounceEnabled": true,
+    "bounceIntensity": 0.25
+  },
+  "result": {
+    "enabled": true,
+    "duration": 5000,
+    "messageTemplate": "~ {winner} ~",
+    "backgroundColor": "#a3b18a",
+    "backgroundOpacity": 0.90,
+    "font": "Georgia, serif",
+    "fontSize": 52,
+    "textColor": "#1a2e0a"
+  },
+  "sound": {
+    "spinStartEnabled": false,
+    "spinStartVolume": 0.8,
+    "winEnabled": false,
+    "winVolume": 0.8
+  },
+  "integrations": { "twitch": { "enabled": false, "channel": "", "botUsername": "" }, "kick": { "enabled": false } },
+  "commands": []
+}
