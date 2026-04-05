@@ -7,7 +7,7 @@ interface PanelProps {
   children: React.ReactNode
 }
 
-export function Panel({ title, badge, defaultOpen = true, children }: PanelProps) {
+export function Panel({ title, badge, defaultOpen = false, children }: PanelProps) {
   const [open, setOpen] = useState(defaultOpen)
 
   return (

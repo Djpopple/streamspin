@@ -28,16 +28,35 @@ function timeAgo(iso: string): string {
 
 export function PresetManager({ config, onLoad }: Props) {
   const [presets, setPresets] = useState<PresetSummary[]>([])
-  const [activeName, setActiveName] = useState('My Wheel')
-  const [activeId, setActiveId] = useState<string | null>(null)
+  const [activeName, setActiveName] = useState(() => localStorage.getItem('ss_activeName') ?? 'My Wheel')
+  const [activeId, setActiveId] = useState<string | null>(() => localStorage.getItem('ss_activeId'))
   const [saving, setSaving] = useState(false)
   const [expanded, setExpanded] = useState(true)
   const nameInputRef = useRef<HTMLInputElement>(null)
 
+  // Persist active preset across reloads
+  useEffect(() => {
+    if (activeId) {
+      localStorage.setItem('ss_activeId', activeId)
+      localStorage.setItem('ss_activeName', activeName)
+    } else {
+      localStorage.removeItem('ss_activeId')
+      localStorage.removeItem('ss_activeName')
+    }
+  }, [activeId, activeName])
+
   useEffect(() => {
     fetch('/api/presets')
       .then(r => r.json())
-      .then((d: { presets: PresetSummary[] }) => setPresets(d.presets))
+      .then((d: { presets: PresetSummary[] }) => {
+        setPresets(d.presets)
+        // If the stored activeId no longer exists in the list, clear it
+        const storedId = localStorage.getItem('ss_activeId')
+        if (storedId && !d.presets.find(p => p.id === storedId)) {
+          setActiveId(null)
+          setActiveName('My Wheel')
+        }
+      })
       .catch(() => {/* server cold start — ignore */})
   }, [])
 
@@ -94,7 +113,7 @@ export function PresetManager({ config, onLoad }: Props) {
 
   const handleNew = () => {
     setActiveId(null)
-    setActiveName('My Wheel')
+    setActiveName('')
     nameInputRef.current?.focus()
   }
 
