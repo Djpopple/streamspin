@@ -119,7 +119,7 @@ function App() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-screen overflow-hidden">
       {/* ── Header ───────────────────────────────────────────────── */}
       <header className="flex items-center justify-between px-5 py-3 bg-surface-raised border-b border-white/10 shrink-0 gap-4">
         <span className="text-lg font-bold tracking-tight shrink-0">StreamSpin</span>
