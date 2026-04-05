@@ -173,19 +173,23 @@ function drawLabels(
     const midAngle = rotation + seg.mid
     const font = segment.fontOverride ?? globalFont
 
-    // All labels sit at the same fixed radius so they're equidistant from
-    // the centre. Per-segment offset shifts in/out from this baseline.
+    // All labels sit at the same fixed radius — equidistant from centre.
     const textX = radius * (0.35 + (segment.labelRadiusOffset ?? 0))
 
-    // Chord width available at textX (80% of full chord to leave breathing room).
-    const availableWidth = 2 * textX * Math.sin(seg.span / 2) * 0.80
+    // Two constraints:
+    // 1. RADIAL — text runs outward from textX; it must not exceed the rim.
+    const maxRadialWidth = radius * 0.90 - textX
 
-    // Measure at the global font size, then scale down proportionally to fit.
-    // Narrow segments get smaller text; wide segments get full-size text.
-    ctx.font = `${style} ${weight} ${globalFontSize}px ${font}`
+    // 2. ANGULAR — at the inner edge of the text (textX), the arc chord limits
+    //    how tall/thick the text can be. Font size must fit in that chord.
+    const maxFontSizeAngular = Math.max(9, 2 * textX * Math.sin(seg.span / 2) * 0.80)
+
+    // Cap at global font size and angular limit, then shrink if text is too long.
+    const targetSize = Math.min(globalFontSize, maxFontSizeAngular)
+    ctx.font = `${style} ${weight} ${targetSize}px ${font}`
     const measuredWidth = ctx.measureText(segment.label).width
-    const scaleFactor = Math.min(1, availableWidth / measuredWidth)
-    const fontSize = Math.max(9, Math.floor(globalFontSize * scaleFactor))
+    const scaleFactor = Math.min(1, maxRadialWidth / measuredWidth)
+    const fontSize = Math.max(9, Math.floor(targetSize * scaleFactor))
 
     ctx.save()
     ctx.translate(cx, cy)
