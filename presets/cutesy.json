@@ -1,14 +1,14 @@
 {
   "version": 1,
   "segments": [
-    { "id": "cu-1",  "label": "Kawaii Gift ♡",   "color": "#ff9eb5", "textColor": "#5a1a2e", "weight": 2, "enabled": true },
-    { "id": "cu-2",  "label": "Star Prize ★",    "color": "#ffe0f0", "textColor": "#c2185b", "weight": 2, "enabled": true },
-    { "id": "cu-3",  "label": "Rainbow Treat",   "color": "#b5d5ff", "textColor": "#1a3a6e", "weight": 2, "enabled": true },
-    { "id": "cu-4",  "label": "Sugar Rush ✿",    "color": "#fff0b5", "textColor": "#7a4f00", "weight": 3, "enabled": true },
-    { "id": "cu-5",  "label": "Bunny Hop ♪",     "color": "#d4b5ff", "textColor": "#3b0764", "weight": 2, "enabled": true },
-    { "id": "cu-6",  "label": "Lollipop Win",    "color": "#ffb5d5", "textColor": "#7a0030", "weight": 2, "enabled": true },
-    { "id": "cu-7",  "label": "Cloud Nine ☁",    "color": "#e8f4ff", "textColor": "#1a4a8a", "weight": 1, "enabled": true },
-    { "id": "cu-8",  "label": "Sparkle Prize ✧", "color": "#ffd6e7", "textColor": "#8b1a4a", "weight": 1, "enabled": true }
+    { "id": "cu-1",  "label": "Kawaii Gift ♡",   "color": "#ff9eb5", "textColor": "#5a1a2e", "weight": 2, "enabled": true, "labelRadiusOffset": -0.15 },
+    { "id": "cu-2",  "label": "Star Prize ★",    "color": "#ffe0f0", "textColor": "#c2185b", "weight": 2, "enabled": true, "labelRadiusOffset": -0.15 },
+    { "id": "cu-3",  "label": "Rainbow Treat",   "color": "#b5d5ff", "textColor": "#1a3a6e", "weight": 2, "enabled": true, "labelRadiusOffset": -0.15 },
+    { "id": "cu-4",  "label": "Sugar Rush ✿",    "color": "#fff0b5", "textColor": "#7a4f00", "weight": 3, "enabled": true, "labelRadiusOffset": -0.15 },
+    { "id": "cu-5",  "label": "Bunny Hop ♪",     "color": "#d4b5ff", "textColor": "#3b0764", "weight": 2, "enabled": true, "labelRadiusOffset": -0.15 },
+    { "id": "cu-6",  "label": "Lollipop Win",    "color": "#ffb5d5", "textColor": "#7a0030", "weight": 2, "enabled": true, "labelRadiusOffset": -0.15 },
+    { "id": "cu-7",  "label": "Cloud Nine ☁",    "color": "#e8f4ff", "textColor": "#1a4a8a", "weight": 1, "enabled": true, "labelRadiusOffset": -0.15 },
+    { "id": "cu-8",  "label": "Sparkle Prize ✧", "color": "#ffd6e7", "textColor": "#8b1a4a", "weight": 1, "enabled": true, "labelRadiusOffset": -0.15 }
   ],
   "removeWinnerMode": false,
   "wheel": {

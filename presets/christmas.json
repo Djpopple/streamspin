@@ -1,16 +1,16 @@
 {
   "version": 1,
   "segments": [
-    { "id": "xm-1",  "label": "Stocking Filler", "color": "#c41e3a", "textColor": "#ffffff", "weight": 3, "enabled": true },
-    { "id": "xm-2",  "label": "Gift Wrap",        "color": "#1e5c1e", "textColor": "#ffd700", "weight": 2, "enabled": true },
-    { "id": "xm-3",  "label": "Snowflake Prize",  "color": "#ddeeff", "textColor": "#1a3a6e", "weight": 2, "enabled": true },
-    { "id": "xm-4",  "label": "Christmas Pudding","color": "#3d1a00", "textColor": "#ffd700", "weight": 1, "enabled": true },
-    { "id": "xm-5",  "label": "Nice List ✓",      "color": "#ffd700", "textColor": "#3d2000", "weight": 2, "enabled": true },
-    { "id": "xm-6",  "label": "Naughty List ✗",   "color": "#c41e3a", "textColor": "#ffffff", "weight": 1, "enabled": true },
-    { "id": "xm-7",  "label": "Hot Cocoa ♨",      "color": "#6b3a2a", "textColor": "#ffe4b5", "weight": 3, "enabled": true },
-    { "id": "xm-8",  "label": "Candy Cane",        "color": "#ffffff", "textColor": "#c41e3a", "weight": 2, "enabled": true },
-    { "id": "xm-9",  "label": "Elf Prize",         "color": "#1e5c1e", "textColor": "#ffd700", "weight": 2, "enabled": true },
-    { "id": "xm-10", "label": "Reindeer Games",    "color": "#8b4513", "textColor": "#ffd700", "weight": 1, "enabled": true }
+    { "id": "xm-1",  "label": "Stocking Filler", "color": "#c41e3a", "textColor": "#ffffff", "weight": 3, "enabled": true, "labelRadiusOffset": -0.15 },
+    { "id": "xm-2",  "label": "Gift Wrap",        "color": "#1e5c1e", "textColor": "#ffd700", "weight": 2, "enabled": true, "labelRadiusOffset": -0.15 },
+    { "id": "xm-3",  "label": "Snowflake Prize",  "color": "#ddeeff", "textColor": "#1a3a6e", "weight": 2, "enabled": true, "labelRadiusOffset": -0.15 },
+    { "id": "xm-4",  "label": "Christmas Pudding","color": "#3d1a00", "textColor": "#ffd700", "weight": 1, "enabled": true, "labelRadiusOffset": -0.15 },
+    { "id": "xm-5",  "label": "Nice List ✓",      "color": "#ffd700", "textColor": "#3d2000", "weight": 2, "enabled": true, "labelRadiusOffset": -0.15 },
+    { "id": "xm-6",  "label": "Naughty List ✗",   "color": "#c41e3a", "textColor": "#ffffff", "weight": 1, "enabled": true, "labelRadiusOffset": -0.15 },
+    { "id": "xm-7",  "label": "Hot Cocoa ♨",      "color": "#6b3a2a", "textColor": "#ffe4b5", "weight": 3, "enabled": true, "labelRadiusOffset": -0.15 },
+    { "id": "xm-8",  "label": "Candy Cane",        "color": "#ffffff", "textColor": "#c41e3a", "weight": 2, "enabled": true, "labelRadiusOffset": -0.15 },
+    { "id": "xm-9",  "label": "Elf Prize",         "color": "#1e5c1e", "textColor": "#ffd700", "weight": 2, "enabled": true, "labelRadiusOffset": -0.15 },
+    { "id": "xm-10", "label": "Reindeer Games",    "color": "#8b4513", "textColor": "#ffd700", "weight": 1, "enabled": true, "labelRadiusOffset": -0.15 }
   ],
   "removeWinnerMode": false,
   "wheel": {
