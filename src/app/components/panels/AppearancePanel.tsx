@@ -3,7 +3,7 @@ import { Panel } from '../ui/Panel'
 import { Slider } from '../ui/Slider'
 import { ColorInput } from '../ui/ColorInput'
 import { Toggle } from '../ui/Toggle'
-import { Select } from '../ui/Select'
+import { FontSelect } from '../ui/FontSelect'
 import { FONTS } from '../../lib/constants'
 
 interface Props {
@@ -87,11 +87,11 @@ export function AppearancePanel({ wheel, onChange }: Props) {
       </div>
 
       {/* Font */}
-      <Select
+      <FontSelect
         label="Font"
         value={wheel.globalFont}
         options={FONTS}
-        onChange={v => set('globalFont', v)}
+        onChange={(v: string) => set('globalFont', v)}
       />
 
       <Slider

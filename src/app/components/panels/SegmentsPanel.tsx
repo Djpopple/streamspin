@@ -3,7 +3,7 @@ import type { Segment } from '@shared/config'
 import { Panel } from '../ui/Panel'
 import { Toggle } from '../ui/Toggle'
 import { ColorInput } from '../ui/ColorInput'
-import { Select } from '../ui/Select'
+import { FontSelect } from '../ui/FontSelect'
 import { Slider } from '../ui/Slider'
 import { SEGMENT_COLORS, FONTS, generateId, cycleColor } from '../../lib/constants'
 
@@ -217,10 +217,10 @@ function SegmentRow({
                 </button>
               )}
             </div>
-            <Select
+            <FontSelect
               value={segment.fontOverride ?? ''}
               options={[{ label: 'Use global font', value: '' }, ...FONTS]}
-              onChange={v => onChange({ ...segment, fontOverride: v || undefined })}
+              onChange={(v: string) => onChange({ ...segment, fontOverride: v || undefined })}
             />
           </div>
         </div>
