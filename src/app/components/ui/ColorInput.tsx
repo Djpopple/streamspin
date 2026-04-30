@@ -73,31 +73,12 @@ export function ColorInput({ label, value, onChange, className = '', compact = f
           {open && (
             <div className="absolute top-full left-0 z-30 mt-1 p-3 bg-surface-overlay rounded-lg border border-white/15 shadow-xl w-72">
 
-              {/* Recent colours */}
-              {recent.length > 0 && (
-                <>
-                  <p className="text-xs text-white/35 mb-1.5">Recent</p>
-                  <div className="flex flex-wrap gap-1.5 mb-2.5">
-                    {recent.map(c => (
-                      <button
-                        key={c}
-                        type="button"
-                        title={c}
-                        style={{ backgroundColor: c }}
-                        className={`w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 ${
-                          value === c ? 'border-white' : 'border-transparent'
-                        }`}
-                        onClick={() => pick(c)}
-                      />
-                    ))}
-                  </div>
-                  <div className="border-t border-white/8 mb-2.5" />
-                </>
-              )}
-
-              {/* Preset palette */}
+              {/* Palette — recent colours first, then presets (deduped) */}
               <div className="grid grid-cols-10 gap-1.5 mb-3">
-                {SEGMENT_COLORS.map(c => (
+                {[
+                  ...recent,
+                  ...SEGMENT_COLORS.filter(c => !recent.includes(c.toLowerCase())),
+                ].map((c, i) => (
                   <button
                     key={c}
                     type="button"
@@ -105,7 +86,7 @@ export function ColorInput({ label, value, onChange, className = '', compact = f
                     style={{ backgroundColor: c }}
                     className={`w-5 h-5 rounded-full border-2 transition-transform hover:scale-110 ${
                       value === c ? 'border-white' : 'border-transparent'
-                    }`}
+                    } ${i < recent.length ? 'ring-1 ring-white/30' : ''}`}
                     onClick={() => pick(c)}
                   />
                 ))}
