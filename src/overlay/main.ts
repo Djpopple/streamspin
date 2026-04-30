@@ -110,7 +110,7 @@ function loop() {
     }
   }
 
-  renderFrame(ctx, config, layout, rotation)
+  renderFrame(ctx, config, layout, rotation, now)
   requestAnimationFrame(loop)
 }
 

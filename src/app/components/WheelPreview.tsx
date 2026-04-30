@@ -106,7 +106,7 @@ export function WheelPreview({ config, socket, size = 480 }: Props) {
         }
       }
 
-      renderFrame(ctx, configRef.current, layoutRef.current, rotationRef.current)
+      renderFrame(ctx, configRef.current, layoutRef.current, rotationRef.current, now)
       rafId = requestAnimationFrame(loop)
     }
 

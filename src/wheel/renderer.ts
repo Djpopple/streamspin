@@ -14,6 +14,7 @@ import {
   getPointerRotation,
   getPointerOrigin,
 } from './pointers.js'
+import { drawAmbientEffects } from './effects.js'
 
 const TWO_PI = Math.PI * 2
 
@@ -31,7 +32,8 @@ export function renderFrame(
   ctx: CanvasRenderingContext2D,
   config: WheelConfig,
   layout: SegmentLayout[],
-  rotation: number
+  rotation: number,
+  timestamp = 0,
 ): void {
   const { width, height } = ctx.canvas
   const cx = width / 2
@@ -63,6 +65,7 @@ export function renderFrame(
   drawHub(ctx, config, cx, cy)
   drawLabels(ctx, config, layout, cx, cy, radius, rotation)
   drawPointer(ctx, config, cx, cy, radius)
+  drawAmbientEffects(ctx, config.wheel.ambientEffect ?? 'none', config.wheel.ambientEffectIntensity ?? 0.6, timestamp)
   drawFrame(ctx, config, width, height)
   ctx.restore()  // ← matches top-level save
 }

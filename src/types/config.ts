@@ -3,6 +3,7 @@
 // import from here. Keep it in sync with config.json.example.
 
 export type SegmentImageMode = 'none' | 'all' | 'alternating' | 'manual' | 'reveal'
+export type AmbientEffect = 'none' | 'silver-stars' | 'gold-sparkles' | 'sakura'
 
 export interface Segment {
   id: string
@@ -71,6 +72,8 @@ export interface WheelAppearance {
   segmentImageDataUrl?: string  // base64 image revealed behind segments
   segmentImageOpacity: number   // 0 – 1
   segmentImageOverlay: number   // 0 – 1 dark veil over image segments for text readability
+  ambientEffect: AmbientEffect
+  ambientEffectIntensity: number  // 0.2 – 1.0
 }
 
 export interface ResultDisplay {
@@ -163,6 +166,8 @@ export const DEFAULT_CONFIG: WheelConfig = {
     segmentImageMode: 'none',
     segmentImageOpacity: 1,
     segmentImageOverlay: 0.35,
+    ambientEffect: 'none',
+    ambientEffectIntensity: 0.6,
   },
   segments: [
     { id: '1', label: 'Prize 1', color: '#e94560', textColor: '#ffffff', weight: 1, enabled: true },

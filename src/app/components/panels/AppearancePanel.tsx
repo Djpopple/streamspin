@@ -1,4 +1,4 @@
-import type { WheelAppearance, SegmentImageMode } from '@shared/config'
+import type { WheelAppearance, SegmentImageMode, AmbientEffect } from '@shared/config'
 
 function resizeAndCrop(file: File, size = 800): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -244,6 +244,47 @@ export function AppearancePanel({ wheel, onChange, onResetReveal }: Props) {
         <p className="text-white/25 text-xs">
           Design a square PNG with transparent centre — see docs for artist spec.
         </p>
+      </div>
+
+      {/* Ambient effects */}
+      <div className="space-y-2">
+        <p className="label">Ambient Effects</p>
+        <div className="grid grid-cols-4 gap-1">
+          {([
+            { value: 'none',          label: 'None' },
+            { value: 'silver-stars',  label: 'Stars' },
+            { value: 'gold-sparkles', label: 'Sparkles' },
+            { value: 'sakura',        label: 'Sakura' },
+          ] as { value: AmbientEffect; label: string }[]).map(opt => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => set('ambientEffect', opt.value)}
+              className={`text-xs py-1.5 rounded-md border capitalize transition-colors ${
+                wheel.ambientEffect === opt.value
+                  ? 'border-accent bg-accent/20 text-accent'
+                  : 'border-white/10 bg-white/5 text-white/50 hover:bg-white/10'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        {wheel.ambientEffect !== 'none' && (
+          <Slider
+            label="Intensity"
+            value={Math.round((wheel.ambientEffectIntensity ?? 0.6) * 100)}
+            min={20} max={100} step={10} unit="%"
+            onChange={v => set('ambientEffectIntensity', v / 100)}
+          />
+        )}
+        {wheel.ambientEffect !== 'none' && (
+          <p className="text-white/25 text-xs -mt-1">
+            {wheel.ambientEffect === 'silver-stars'  && 'White 4-pointed stars drift outward from the wheel centre and pulse.'}
+            {wheel.ambientEffect === 'gold-sparkles' && 'Gold sparkles scattered across the canvas twinkle in and out.'}
+            {wheel.ambientEffect === 'sakura'        && 'Pink cherry blossom petals fall gently across the canvas.'}
+          </p>
+        )}
       </div>
 
       {/* Segment image */}
