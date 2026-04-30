@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "wheel": {
+    "backgroundColor": "transparent",
+    "borderWidth": 5,
+    "borderColor": "#ffffff",
+    "hubSize": 28,
+    "hubColor": "#ffffff",
+    "globalFont": "Lobster, cursive",
+    "globalFontSize": 20,
+    "glowEnabled": false,
+    "glowColor": "#ffffff",
+    "glowIntensity": 10,
+    "shadowEnabled": true,
+    "framePadding": 56,
+    "frameEnabled": false,
+    "labelBold": true,
+    "labelItalic": false,
+    "segmentImageMode": "none",
+    "segmentImageOpacity": 1,
+    "segmentImageOverlay": 0.35
+  },
+  "segments": [
+    { "id": "1", "label": "Prize 1", "color": "#e94560", "gradientColor": "#ff9a00", "textColor": "#ffffff", "weight": 1, "enabled": true },
+    { "id": "2", "label": "Prize 2", "color": "#3b82f6", "gradientColor": "#8b5cf6", "textColor": "#ffffff", "weight": 1, "enabled": true },
+    { "id": "3", "label": "Prize 3", "color": "#22c55e", "gradientColor": "#06b6d4", "textColor": "#ffffff", "weight": 1, "enabled": true },
+    { "id": "4", "label": "Prize 4", "color": "#ec4899", "gradientColor": "#a855f7", "textColor": "#ffffff", "weight": 1, "enabled": true },
+    { "id": "5", "label": "Prize 5", "color": "#f97316", "gradientColor": "#eab308", "textColor": "#ffffff", "weight": 1, "enabled": true },
+    { "id": "6", "label": "Prize 6", "color": "#6366f1", "gradientColor": "#ec4899", "textColor": "#ffffff", "weight": 1, "enabled": true }
+  ],
+  "pointer": {
+    "preset": "gem",
+    "position": "top",
+    "scale": 1.1
+  },
+  "spin": {
+    "durationMin": 4000,
+    "durationMax": 8000,
+    "rotationsMin": 5,
+    "rotationsMax": 10,
+    "easing": "ease-out-cubic",
+    "bounce": false,
+    "bounceIntensity": 0.3
+  },
+  "result": {
+    "enabled": true,
+    "duration": 4000,
+    "lingerDuration": 0,
+    "messageTemplate": "🎉 {winner} 🎉",
+    "backgroundColor": "#000000",
+    "backgroundOpacity": 0.75,
+    "font": "Lobster, cursive",
+    "fontSize": 52,
+    "textColor": "#ffffff"
+  },
+  "sound": {
+    "spinStartEnabled": false,
+    "spinStartVolume": 0.8,
+    "winEnabled": false,
+    "winVolume": 0.8
+  },
+  "commands": [
+    { "name": "spin", "trigger": "!spin", "enabled": true, "cooldownSeconds": 30, "modOnly": false, "broadcasterOnly": false, "response": "The wheel is spinning! 🎡" },
+    { "name": "addslice", "trigger": "!addslice", "enabled": true, "cooldownSeconds": 0, "modOnly": true, "broadcasterOnly": false, "response": "" },
+    { "name": "removeslice", "trigger": "!removeslice", "enabled": true, "cooldownSeconds": 0, "modOnly": true, "broadcasterOnly": false, "response": "" }
+  ],
+  "removeWinnerMode": false,
+  "integrations": {
+    "twitch": { "enabled": false, "channel": "", "botUsername": "", "channelPointsEnabled": false },
+    "kick": { "enabled": false, "botrixSetupComplete": false },
+    "webhook": { "enabled": true }
+  }
+}

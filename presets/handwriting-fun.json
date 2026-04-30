@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "wheel": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderColor": "#ffffff",
+    "hubSize": 20,
+    "hubColor": "#ffffff",
+    "globalFont": "\"Permanent Marker\", cursive",
+    "globalFontSize": 22,
+    "glowEnabled": false,
+    "glowColor": "#ffffff",
+    "glowIntensity": 10,
+    "shadowEnabled": true,
+    "framePadding": 48,
+    "frameEnabled": false,
+    "labelBold": false,
+    "labelItalic": false,
+    "segmentImageMode": "none",
+    "segmentImageOpacity": 1,
+    "segmentImageOverlay": 0.35
+  },
+  "segments": [
+    { "id": "1", "label": "Free Hug",  "color": "#f43f5e", "textColor": "#ffffff", "weight": 1, "enabled": true },
+    { "id": "2", "label": "Dance!",    "color": "#fbbf24", "textColor": "#000000", "weight": 1, "enabled": true },
+    { "id": "3", "label": "Silly Hat", "color": "#22c55e", "textColor": "#ffffff", "weight": 1, "enabled": true },
+    { "id": "4", "label": "Tell a Joke","color": "#06b6d4","textColor": "#ffffff", "weight": 1, "enabled": true },
+    { "id": "5", "label": "Spin Again","color": "#a855f7", "textColor": "#ffffff", "weight": 1, "enabled": true },
+    { "id": "6", "label": "Bonk!",     "color": "#f97316", "textColor": "#ffffff", "weight": 1, "enabled": true }
+  ],
+  "pointer": {
+    "preset": "hand",
+    "position": "top",
+    "scale": 1.2
+  },
+  "spin": {
+    "durationMin": 4000,
+    "durationMax": 8000,
+    "rotationsMin": 5,
+    "rotationsMax": 10,
+    "easing": "ease-out-quint",
+    "bounce": true,
+    "bounceIntensity": 0.4
+  },
+  "result": {
+    "enabled": true,
+    "duration": 4000,
+    "lingerDuration": 0,
+    "messageTemplate": "✏️ {winner}! ✏️",
+    "backgroundColor": "#000000",
+    "backgroundOpacity": 0.7,
+    "font": "\"Permanent Marker\", cursive",
+    "fontSize": 52,
+    "textColor": "#fbbf24"
+  },
+  "sound": {
+    "spinStartEnabled": false,
+    "spinStartVolume": 0.8,
+    "winEnabled": false,
+    "winVolume": 0.8
+  },
+  "commands": [
+    { "name": "spin", "trigger": "!spin", "enabled": true, "cooldownSeconds": 30, "modOnly": false, "broadcasterOnly": false, "response": "The wheel is spinning! 🎡" },
+    { "name": "addslice", "trigger": "!addslice", "enabled": true, "cooldownSeconds": 0, "modOnly": true, "broadcasterOnly": false, "response": "" },
+    { "name": "removeslice", "trigger": "!removeslice", "enabled": true, "cooldownSeconds": 0, "modOnly": true, "broadcasterOnly": false, "response": "" }
+  ],
+  "removeWinnerMode": false,
+  "integrations": {
+    "twitch": { "enabled": false, "channel": "", "botUsername": "", "channelPointsEnabled": false },
+    "kick": { "enabled": false, "botrixSetupComplete": false },
+    "webhook": { "enabled": true }
+  }
+}

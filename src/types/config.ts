@@ -15,6 +15,8 @@ export interface Segment {
   fontOverride?: string
   labelRadiusOffset?: number  // fraction of radius to shift label in/out (-0.4 … +0.4)
   showImage?: boolean         // whether this segment reveals the segment image
+  soundDataUrl?: string       // per-segment win sound (overrides global win sound)
+  soundVolume?: number        // 0.0 – 1.0, defaults to global win volume
 }
 
 export type PointerPreset =

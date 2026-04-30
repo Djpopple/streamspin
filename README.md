@@ -308,13 +308,20 @@ History survives restarts. Click **Clear all** to start fresh.
 
 Click **Import** in the editor header and select any `.json` file from the `presets/` folder in the StreamSpin directory. This loads a ready-made theme you can customise from.
 
-| File | Vibe |
+| File | Vibe / Features tested |
 |---|---|
-| `halloween.json` | Spooky orange and purple |
-| `goth.json` | Dark, moody, slow spin |
-| `cutesy.json` | Soft pastels, bouncy |
-| `cottage-core.json` | Earthy and gentle |
-| `christmas.json` | Festive red, green, and gold |
+| `neon-arcade.json` | Glow effect, Orbitron font, neon colours, linger |
+| `gradient-vibes.json` | Per-segment gradient fills, Lobster font, bold |
+| `streamer-classic.json` | Clean border, hub, drop shadow, Montserrat |
+| `bouncy-fast.json` | Bounce physics, fast spin, Bangers font |
+| `slow-drift.json` | Very slow expo spin, italic labels, Satisfy font |
+| `gaming-pixels.json` | Press Start 2P font, solid background, glow, green tones |
+| `weighted-jackpot.json` | Heavily weighted rarity tiers, Russo One font |
+| `elegant-evening.json` | Playfair Display italic, Cinzel result font, gold/dark |
+| `handwriting-fun.json` | Permanent Marker, bounce, no border, fun labels |
+| `big-reveal.json` | Alternating image mode, 5s linger, Fredoka font |
+| `remove-winner-gauntlet.json` | Remove winner mode, 10 viewer slots, Nunito |
+| `minimal-zen.json` | No border/hub/shadow/glow, very slow, muted palette |
 
 ---
 

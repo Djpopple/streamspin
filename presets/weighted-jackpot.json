@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "wheel": {
+    "backgroundColor": "transparent",
+    "borderWidth": 4,
+    "borderColor": "#fbbf24",
+    "hubSize": 26,
+    "hubColor": "#fbbf24",
+    "globalFont": "\"Russo One\", sans-serif",
+    "globalFontSize": 16,
+    "glowEnabled": false,
+    "glowColor": "#fbbf24",
+    "glowIntensity": 10,
+    "shadowEnabled": true,
+    "framePadding": 56,
+    "frameEnabled": false,
+    "labelBold": false,
+    "labelItalic": false,
+    "segmentImageMode": "none",
+    "segmentImageOpacity": 1,
+    "segmentImageOverlay": 0.35
+  },
+  "segments": [
+    { "id": "1", "label": "JACKPOT",   "color": "#fbbf24", "textColor": "#000000", "weight": 1,  "enabled": true },
+    { "id": "2", "label": "Common",    "color": "#374151", "textColor": "#9ca3af", "weight": 8,  "enabled": true },
+    { "id": "3", "label": "Rare",      "color": "#1d4ed8", "textColor": "#ffffff", "weight": 3,  "enabled": true },
+    { "id": "4", "label": "Common",    "color": "#374151", "textColor": "#9ca3af", "weight": 8,  "enabled": true },
+    { "id": "5", "label": "Epic",      "color": "#7c3aed", "textColor": "#ffffff", "weight": 2,  "enabled": true },
+    { "id": "6", "label": "Common",    "color": "#374151", "textColor": "#9ca3af", "weight": 8,  "enabled": true },
+    { "id": "7", "label": "Uncommon",  "color": "#065f46", "textColor": "#6ee7b7", "weight": 5,  "enabled": true },
+    { "id": "8", "label": "Common",    "color": "#374151", "textColor": "#9ca3af", "weight": 8,  "enabled": true }
+  ],
+  "pointer": {
+    "preset": "arrow",
+    "position": "top",
+    "scale": 1.0
+  },
+  "spin": {
+    "durationMin": 5000,
+    "durationMax": 10000,
+    "rotationsMin": 6,
+    "rotationsMax": 14,
+    "easing": "ease-out-cubic",
+    "bounce": false,
+    "bounceIntensity": 0.3
+  },
+  "result": {
+    "enabled": true,
+    "duration": 5000,
+    "lingerDuration": 0,
+    "messageTemplate": "🎰 {winner}! 🎰",
+    "backgroundColor": "#000000",
+    "backgroundOpacity": 0.8,
+    "font": "\"Russo One\", sans-serif",
+    "fontSize": 48,
+    "textColor": "#fbbf24"
+  },
+  "sound": {
+    "spinStartEnabled": false,
+    "spinStartVolume": 0.8,
+    "winEnabled": false,
+    "winVolume": 0.8
+  },
+  "commands": [
+    { "name": "spin", "trigger": "!spin", "enabled": true, "cooldownSeconds": 30, "modOnly": false, "broadcasterOnly": false, "response": "The wheel is spinning! 🎡" },
+    { "name": "addslice", "trigger": "!addslice", "enabled": true, "cooldownSeconds": 0, "modOnly": true, "broadcasterOnly": false, "response": "" },
+    { "name": "removeslice", "trigger": "!removeslice", "enabled": true, "cooldownSeconds": 0, "modOnly": true, "broadcasterOnly": false, "response": "" }
+  ],
+  "removeWinnerMode": false,
+  "integrations": {
+    "twitch": { "enabled": false, "channel": "", "botUsername": "", "channelPointsEnabled": false },
+    "kick": { "enabled": false, "botrixSetupComplete": false },
+    "webhook": { "enabled": true }
+  }
+}

@@ -226,6 +226,53 @@ function SegmentRow({
             />
           </div>
 
+          {/* Per-segment win sound */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="label">Win sound</span>
+              {segment.soundDataUrl && (
+                <button
+                  type="button"
+                  onClick={() => { const { soundDataUrl: _, soundVolume: __, ...rest } = segment; onChange(rest as Segment) }}
+                  className="text-xs text-white/40 hover:text-red-400 transition-colors"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+            <label className={`flex items-center gap-2 cursor-pointer rounded-md border-2 border-dashed p-2.5 transition-colors ${
+              segment.soundDataUrl ? 'border-accent/50 bg-accent/5' : 'border-white/15 hover:border-white/30'
+            }`}>
+              <input
+                type="file"
+                accept="audio/*"
+                className="sr-only"
+                onChange={e => {
+                  const file = e.target.files?.[0]
+                  if (!file) return
+                  const reader = new FileReader()
+                  reader.onload = ev => {
+                    onChange({ ...segment, soundDataUrl: ev.target?.result as string, soundVolume: segment.soundVolume ?? 0.8 })
+                  }
+                  reader.readAsDataURL(file)
+                  e.target.value = ''
+                }}
+              />
+              <span className="text-xs text-white/50">
+                {segment.soundDataUrl ? 'Sound loaded — click to replace' : 'Click to upload win sound…'}
+              </span>
+            </label>
+            {segment.soundDataUrl && (
+              <Slider
+                label="Sound volume"
+                value={Math.round((segment.soundVolume ?? 0.8) * 100)}
+                min={0} max={100} step={5} unit="%"
+                onChange={v => onChange({ ...segment, soundVolume: v / 100 })}
+              />
+            )}
+            <p className="text-white/25 text-xs">Overrides the global win sound for this segment only.</p>
+          </div>
+
           {/* Show image — only relevant in manual/reveal modes */}
           {(segmentImageMode === 'manual' || segmentImageMode === 'reveal') && (
             <Toggle

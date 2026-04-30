@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "wheel": {
+    "backgroundColor": "#0a0a0f",
+    "borderWidth": 2,
+    "borderColor": "#00ff41",
+    "hubSize": 28,
+    "hubColor": "#0a0a0f",
+    "globalFont": "\"Press Start 2P\", monospace",
+    "globalFontSize": 10,
+    "glowEnabled": true,
+    "glowColor": "#00ff41",
+    "glowIntensity": 16,
+    "shadowEnabled": false,
+    "framePadding": 56,
+    "frameEnabled": false,
+    "labelBold": false,
+    "labelItalic": false,
+    "segmentImageMode": "none",
+    "segmentImageOpacity": 1,
+    "segmentImageOverlay": 0.35
+  },
+  "segments": [
+    { "id": "1", "label": "1UP",      "color": "#00ff41", "textColor": "#000000", "weight": 1, "enabled": true },
+    { "id": "2", "label": "GAME OVR", "color": "#1a1a2e", "textColor": "#00ff41", "weight": 2, "enabled": true },
+    { "id": "3", "label": "BONUS LVL","color": "#0099ff", "textColor": "#000000", "weight": 1, "enabled": true },
+    { "id": "4", "label": "MISS",     "color": "#1a1a2e", "textColor": "#0099ff", "weight": 2, "enabled": true },
+    { "id": "5", "label": "LOOT BOX", "color": "#ff6600", "textColor": "#000000", "weight": 1, "enabled": true },
+    { "id": "6", "label": "MISS",     "color": "#1a1a2e", "textColor": "#ff6600", "weight": 2, "enabled": true }
+  ],
+  "pointer": {
+    "preset": "triangle",
+    "position": "top",
+    "scale": 1.1,
+    "colorTint": "#00ff41"
+  },
+  "spin": {
+    "durationMin": 3000,
+    "durationMax": 6000,
+    "rotationsMin": 5,
+    "rotationsMax": 10,
+    "easing": "ease-out-quint",
+    "bounce": false,
+    "bounceIntensity": 0.3
+  },
+  "result": {
+    "enabled": true,
+    "duration": 4000,
+    "lingerDuration": 0,
+    "messageTemplate": "PLAYER 1: {winner}",
+    "backgroundColor": "#0a0a0f",
+    "backgroundOpacity": 0.9,
+    "font": "\"Press Start 2P\", monospace",
+    "fontSize": 28,
+    "textColor": "#00ff41"
+  },
+  "sound": {
+    "spinStartEnabled": false,
+    "spinStartVolume": 0.8,
+    "winEnabled": false,
+    "winVolume": 0.8
+  },
+  "commands": [
+    { "name": "spin", "trigger": "!spin", "enabled": true, "cooldownSeconds": 30, "modOnly": false, "broadcasterOnly": false, "response": "The wheel is spinning! 🎡" },
+    { "name": "addslice", "trigger": "!addslice", "enabled": true, "cooldownSeconds": 0, "modOnly": true, "broadcasterOnly": false, "response": "" },
+    { "name": "removeslice", "trigger": "!removeslice", "enabled": true, "cooldownSeconds": 0, "modOnly": true, "broadcasterOnly": false, "response": "" }
+  ],
+  "removeWinnerMode": false,
+  "integrations": {
+    "twitch": { "enabled": false, "channel": "", "botUsername": "", "channelPointsEnabled": false },
+    "kick": { "enabled": false, "botrixSetupComplete": false },
+    "webhook": { "enabled": true }
+  }
+}

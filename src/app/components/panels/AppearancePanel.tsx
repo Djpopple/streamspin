@@ -1,4 +1,25 @@
 import type { WheelAppearance, SegmentImageMode } from '@shared/config'
+
+function resizeAndCrop(file: File, size = 800): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => {
+      const { naturalWidth: w, naturalHeight: h } = img
+      // Center-crop to the largest square, then scale to target size
+      const cropSize = Math.min(w, h)
+      const sx = (w - cropSize) / 2
+      const sy = (h - cropSize) / 2
+      const canvas = document.createElement('canvas')
+      canvas.width = size
+      canvas.height = size
+      canvas.getContext('2d')!.drawImage(img, sx, sy, cropSize, cropSize, 0, 0, size, size)
+      resolve(canvas.toDataURL('image/jpeg', 0.85))
+      URL.revokeObjectURL(img.src)
+    }
+    img.onerror = reject
+    img.src = URL.createObjectURL(file)
+  })
+}
 import { Panel } from '../ui/Panel'
 import { Slider } from '../ui/Slider'
 import { ColorInput } from '../ui/ColorInput'
@@ -263,9 +284,7 @@ export function AppearancePanel({ wheel, onChange, onResetReveal }: Props) {
                 onChange={e => {
                   const file = e.target.files?.[0]
                   if (!file) return
-                  const reader = new FileReader()
-                  reader.onload = ev => set('segmentImageDataUrl', ev.target?.result as string)
-                  reader.readAsDataURL(file)
+                  resizeAndCrop(file).then(dataUrl => set('segmentImageDataUrl', dataUrl))
                   e.target.value = ''
                 }}
               />

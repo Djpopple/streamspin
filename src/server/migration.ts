@@ -33,6 +33,8 @@ export function migrateConfig(raw: unknown): WheelConfig {
     ...(seg.fontOverride !== undefined ? { fontOverride: seg.fontOverride } : {}),
     ...(seg.labelRadiusOffset !== undefined ? { labelRadiusOffset: seg.labelRadiusOffset } : {}),
     ...(seg.showImage !== undefined ? { showImage: seg.showImage } : {}),
+    ...(seg.soundDataUrl !== undefined ? { soundDataUrl: seg.soundDataUrl } : {}),
+    ...(seg.soundVolume !== undefined ? { soundVolume: seg.soundVolume } : {}),
   }))
 
   // Ensure commands array is present

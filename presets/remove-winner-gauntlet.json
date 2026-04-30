@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "wheel": {
+    "backgroundColor": "transparent",
+    "borderWidth": 3,
+    "borderColor": "#f43f5e",
+    "hubSize": 20,
+    "hubColor": "#f43f5e",
+    "globalFont": "Nunito, sans-serif",
+    "globalFontSize": 16,
+    "glowEnabled": false,
+    "glowColor": "#f43f5e",
+    "glowIntensity": 10,
+    "shadowEnabled": true,
+    "framePadding": 48,
+    "frameEnabled": false,
+    "labelBold": true,
+    "labelItalic": false,
+    "segmentImageMode": "none",
+    "segmentImageOpacity": 1,
+    "segmentImageOverlay": 0.35
+  },
+  "segments": [
+    { "id": "1",  "label": "Viewer 1",  "color": "#e94560", "textColor": "#ffffff", "weight": 1, "enabled": true },
+    { "id": "2",  "label": "Viewer 2",  "color": "#f97316", "textColor": "#ffffff", "weight": 1, "enabled": true },
+    { "id": "3",  "label": "Viewer 3",  "color": "#eab308", "textColor": "#000000", "weight": 1, "enabled": true },
+    { "id": "4",  "label": "Viewer 4",  "color": "#22c55e", "textColor": "#ffffff", "weight": 1, "enabled": true },
+    { "id": "5",  "label": "Viewer 5",  "color": "#06b6d4", "textColor": "#ffffff", "weight": 1, "enabled": true },
+    { "id": "6",  "label": "Viewer 6",  "color": "#3b82f6", "textColor": "#ffffff", "weight": 1, "enabled": true },
+    { "id": "7",  "label": "Viewer 7",  "color": "#8b5cf6", "textColor": "#ffffff", "weight": 1, "enabled": true },
+    { "id": "8",  "label": "Viewer 8",  "color": "#ec4899", "textColor": "#ffffff", "weight": 1, "enabled": true },
+    { "id": "9",  "label": "Viewer 9",  "color": "#14b8a6", "textColor": "#ffffff", "weight": 1, "enabled": true },
+    { "id": "10", "label": "Viewer 10", "color": "#a855f7", "textColor": "#ffffff", "weight": 1, "enabled": true }
+  ],
+  "pointer": {
+    "preset": "arrow",
+    "position": "top",
+    "scale": 1.0
+  },
+  "spin": {
+    "durationMin": 4000,
+    "durationMax": 8000,
+    "rotationsMin": 5,
+    "rotationsMax": 10,
+    "easing": "ease-out-cubic",
+    "bounce": false,
+    "bounceIntensity": 0.3
+  },
+  "result": {
+    "enabled": true,
+    "duration": 4000,
+    "lingerDuration": 0,
+    "messageTemplate": "🏆 {winner} is out! 🏆",
+    "backgroundColor": "#000000",
+    "backgroundOpacity": 0.8,
+    "font": "Nunito, sans-serif",
+    "fontSize": 48,
+    "textColor": "#f43f5e"
+  },
+  "sound": {
+    "spinStartEnabled": false,
+    "spinStartVolume": 0.8,
+    "winEnabled": false,
+    "winVolume": 0.8
+  },
+  "commands": [
+    { "name": "spin", "trigger": "!spin", "enabled": true, "cooldownSeconds": 30, "modOnly": false, "broadcasterOnly": false, "response": "The wheel is spinning! 🎡" },
+    { "name": "addslice", "trigger": "!addslice", "enabled": true, "cooldownSeconds": 0, "modOnly": true, "broadcasterOnly": false, "response": "" },
+    { "name": "removeslice", "trigger": "!removeslice", "enabled": true, "cooldownSeconds": 0, "modOnly": true, "broadcasterOnly": false, "response": "" }
+  ],
+  "removeWinnerMode": true,
+  "integrations": {
+    "twitch": { "enabled": false, "channel": "", "botUsername": "", "channelPointsEnabled": false },
+    "kick": { "enabled": false, "botrixSetupComplete": false },
+    "webhook": { "enabled": true }
+  }
+}

@@ -94,7 +94,10 @@ function loop() {
       socket.emit('spin-complete', { winner: winnerSegment, triggeredBy })
       showResult(winnerSegment)
 
-      if (config.sound.winEnabled) {
+      if (winnerSegment.soundDataUrl) {
+        // Per-segment sound overrides the global win sound
+        playAudio(winnerSegment.soundDataUrl, winnerSegment.soundVolume ?? config.sound.winVolume)
+      } else if (config.sound.winEnabled) {
         playAudio(config.sound.winDataUrl, config.sound.winVolume)
       }
 

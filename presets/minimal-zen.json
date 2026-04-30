@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "wheel": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderColor": "#ffffff",
+    "hubSize": 0,
+    "hubColor": "#ffffff",
+    "globalFont": "Nunito, sans-serif",
+    "globalFontSize": 18,
+    "glowEnabled": false,
+    "glowColor": "#ffffff",
+    "glowIntensity": 10,
+    "shadowEnabled": false,
+    "framePadding": 40,
+    "frameEnabled": false,
+    "labelBold": false,
+    "labelItalic": false,
+    "segmentImageMode": "none",
+    "segmentImageOpacity": 1,
+    "segmentImageOverlay": 0.35
+  },
+  "segments": [
+    { "id": "1", "label": "Stone",   "color": "#6b7280", "textColor": "#f3f4f6", "weight": 1, "enabled": true },
+    { "id": "2", "label": "Mist",    "color": "#9ca3af", "textColor": "#1f2937", "weight": 1, "enabled": true },
+    { "id": "3", "label": "Sand",    "color": "#d1b896", "textColor": "#1f2937", "weight": 1, "enabled": true },
+    { "id": "4", "label": "Smoke",   "color": "#4b5563", "textColor": "#e5e7eb", "weight": 1, "enabled": true },
+    { "id": "5", "label": "Chalk",   "color": "#e5e7eb", "textColor": "#374151", "weight": 1, "enabled": true },
+    { "id": "6", "label": "Slate",   "color": "#374151", "textColor": "#d1d5db", "weight": 1, "enabled": true }
+  ],
+  "pointer": {
+    "preset": "pin",
+    "position": "top",
+    "scale": 0.9
+  },
+  "spin": {
+    "durationMin": 8000,
+    "durationMax": 14000,
+    "rotationsMin": 3,
+    "rotationsMax": 6,
+    "easing": "ease-out-expo",
+    "bounce": false,
+    "bounceIntensity": 0.3
+  },
+  "result": {
+    "enabled": true,
+    "duration": 4000,
+    "lingerDuration": 0,
+    "messageTemplate": "{winner}",
+    "backgroundColor": "#1f2937",
+    "backgroundOpacity": 0.6,
+    "font": "Nunito, sans-serif",
+    "fontSize": 48,
+    "textColor": "#f9fafb"
+  },
+  "sound": {
+    "spinStartEnabled": false,
+    "spinStartVolume": 0.8,
+    "winEnabled": false,
+    "winVolume": 0.8
+  },
+  "commands": [
+    { "name": "spin", "trigger": "!spin", "enabled": true, "cooldownSeconds": 30, "modOnly": false, "broadcasterOnly": false, "response": "The wheel is spinning! 🎡" },
+    { "name": "addslice", "trigger": "!addslice", "enabled": true, "cooldownSeconds": 0, "modOnly": true, "broadcasterOnly": false, "response": "" },
+    { "name": "removeslice", "trigger": "!removeslice", "enabled": true, "cooldownSeconds": 0, "modOnly": true, "broadcasterOnly": false, "response": "" }
+  ],
+  "removeWinnerMode": false,
+  "integrations": {
+    "twitch": { "enabled": false, "channel": "", "botUsername": "", "channelPointsEnabled": false },
+    "kick": { "enabled": false, "botrixSetupComplete": false },
+    "webhook": { "enabled": true }
+  }
+}

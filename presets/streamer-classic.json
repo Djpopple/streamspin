@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "wheel": {
+    "backgroundColor": "transparent",
+    "borderWidth": 6,
+    "borderColor": "#ffffff",
+    "hubSize": 32,
+    "hubColor": "#ffffff",
+    "globalFont": "Montserrat, sans-serif",
+    "globalFontSize": 18,
+    "glowEnabled": false,
+    "glowColor": "#ffffff",
+    "glowIntensity": 10,
+    "shadowEnabled": true,
+    "framePadding": 60,
+    "frameEnabled": false,
+    "labelBold": true,
+    "labelItalic": false,
+    "segmentImageMode": "none",
+    "segmentImageOpacity": 1,
+    "segmentImageOverlay": 0.35
+  },
+  "segments": [
+    { "id": "1", "label": "1st Prize",  "color": "#e94560", "textColor": "#ffffff", "weight": 1, "enabled": true },
+    { "id": "2", "label": "2nd Prize",  "color": "#0f3460", "textColor": "#ffffff", "weight": 2, "enabled": true },
+    { "id": "3", "label": "3rd Prize",  "color": "#16213e", "textColor": "#ffffff", "weight": 2, "enabled": true },
+    { "id": "4", "label": "Better Luck","color": "#533483", "textColor": "#ffffff", "weight": 3, "enabled": true },
+    { "id": "5", "label": "1st Prize",  "color": "#e94560", "textColor": "#ffffff", "weight": 1, "enabled": true },
+    { "id": "6", "label": "Better Luck","color": "#0f3460", "textColor": "#ffffff", "weight": 3, "enabled": true }
+  ],
+  "pointer": {
+    "preset": "arrow",
+    "position": "top",
+    "scale": 1.0
+  },
+  "spin": {
+    "durationMin": 4000,
+    "durationMax": 9000,
+    "rotationsMin": 5,
+    "rotationsMax": 12,
+    "easing": "ease-out-cubic",
+    "bounce": false,
+    "bounceIntensity": 0.3
+  },
+  "result": {
+    "enabled": true,
+    "duration": 5000,
+    "lingerDuration": 0,
+    "messageTemplate": "🎉 {winner} 🎉",
+    "backgroundColor": "#000000",
+    "backgroundOpacity": 0.8,
+    "font": "Montserrat, sans-serif",
+    "fontSize": 48,
+    "textColor": "#ffffff"
+  },
+  "sound": {
+    "spinStartEnabled": false,
+    "spinStartVolume": 0.8,
+    "winEnabled": false,
+    "winVolume": 0.8
+  },
+  "commands": [
+    { "name": "spin", "trigger": "!spin", "enabled": true, "cooldownSeconds": 30, "modOnly": false, "broadcasterOnly": false, "response": "The wheel is spinning! 🎡" },
+    { "name": "addslice", "trigger": "!addslice", "enabled": true, "cooldownSeconds": 0, "modOnly": true, "broadcasterOnly": false, "response": "" },
+    { "name": "removeslice", "trigger": "!removeslice", "enabled": true, "cooldownSeconds": 0, "modOnly": true, "broadcasterOnly": false, "response": "" }
+  ],
+  "removeWinnerMode": false,
+  "integrations": {
+    "twitch": { "enabled": false, "channel": "", "botUsername": "", "channelPointsEnabled": false },
+    "kick": { "enabled": false, "botrixSetupComplete": false },
+    "webhook": { "enabled": true }
+  }
+}

@@ -111,6 +111,22 @@ Legend: `[x]` = done, `[ ]` = todo, `[-]` = deferred / won't do this phase
 
 ---
 
+## Phase 4d — Sound Per Segment + Presets ✅
+- [x] **Per-segment win sound** — upload an audio file per segment; overrides global win sound on that segment's win
+  - [x] `soundDataUrl?: string` and `soundVolume?: number` on `Segment` type
+  - [x] Migration carries both fields through unchanged
+  - [x] Upload UI in segment advanced options with volume slider
+  - [x] Overlay plays segment sound in preference to global win sound
+- [x] **Rebuilt preset library** — 12 new presets, each testing distinct features:
+  - `neon-arcade` (glow, Orbitron, linger), `gradient-vibes` (per-segment gradients, Lobster),
+  - `streamer-classic` (border/hub/shadow, Montserrat), `bouncy-fast` (bounce, quint easing, Bangers),
+  - `slow-drift` (expo, 10–16s, Satisfy, italic), `gaming-pixels` (Press Start 2P, solid bg, glow),
+  - `weighted-jackpot` (rarity weights, Russo One), `elegant-evening` (Playfair/Cinzel, gold/dark, italic),
+  - `handwriting-fun` (Permanent Marker, bounce, no border), `big-reveal` (alternating image mode, 5s linger),
+  - `remove-winner-gauntlet` (remove winner mode, 10 slots), `minimal-zen` (no border/hub/glow, expo, muted)
+
+---
+
 ## Phase 5 — Distribution (Next)
 - [ ] Electron wrapper — bundle server + editor into single `.exe` / `.dmg`
 - [ ] Auto-updater (Electron)

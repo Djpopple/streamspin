@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "wheel": {
+    "backgroundColor": "transparent",
+    "borderWidth": 3,
+    "borderColor": "#00ffcc",
+    "hubSize": 30,
+    "hubColor": "#000000",
+    "globalFont": "Orbitron, sans-serif",
+    "globalFontSize": 15,
+    "glowEnabled": true,
+    "glowColor": "#00ffcc",
+    "glowIntensity": 24,
+    "shadowEnabled": true,
+    "framePadding": 56,
+    "frameEnabled": false,
+    "labelBold": true,
+    "labelItalic": false,
+    "segmentImageMode": "none",
+    "segmentImageOpacity": 1,
+    "segmentImageOverlay": 0.35
+  },
+  "segments": [
+    { "id": "1", "label": "BIG WIN",   "color": "#00ffcc", "textColor": "#000000", "weight": 1, "enabled": true },
+    { "id": "2", "label": "Try Again", "color": "#0f0f2e", "textColor": "#00ffcc", "weight": 2, "enabled": true },
+    { "id": "3", "label": "Jackpot",   "color": "#ff00ff", "textColor": "#000000", "weight": 1, "enabled": true },
+    { "id": "4", "label": "Try Again", "color": "#0f0f2e", "textColor": "#ff00ff", "weight": 2, "enabled": true },
+    { "id": "5", "label": "Free Spin", "color": "#00eeff", "textColor": "#000000", "weight": 2, "enabled": true },
+    { "id": "6", "label": "Try Again", "color": "#0f0f2e", "textColor": "#00eeff", "weight": 2, "enabled": true },
+    { "id": "7", "label": "BONUS",     "color": "#ffff00", "textColor": "#000000", "weight": 1, "enabled": true },
+    { "id": "8", "label": "Try Again", "color": "#0f0f2e", "textColor": "#ffff00", "weight": 2, "enabled": true }
+  ],
+  "pointer": {
+    "preset": "triangle",
+    "position": "top",
+    "scale": 1.2,
+    "colorTint": "#00ffcc"
+  },
+  "spin": {
+    "durationMin": 3500,
+    "durationMax": 7000,
+    "rotationsMin": 6,
+    "rotationsMax": 12,
+    "easing": "ease-out-quint",
+    "bounce": false,
+    "bounceIntensity": 0.3
+  },
+  "result": {
+    "enabled": true,
+    "duration": 4000,
+    "lingerDuration": 1000,
+    "messageTemplate": ">>> {winner} <<<",
+    "backgroundColor": "#000000",
+    "backgroundOpacity": 0.85,
+    "font": "Orbitron, sans-serif",
+    "fontSize": 44,
+    "textColor": "#00ffcc"
+  },
+  "sound": {
+    "spinStartEnabled": false,
+    "spinStartVolume": 0.8,
+    "winEnabled": false,
+    "winVolume": 0.8
+  },
+  "commands": [
+    { "name": "spin", "trigger": "!spin", "enabled": true, "cooldownSeconds": 30, "modOnly": false, "broadcasterOnly": false, "response": "The wheel is spinning! 🎡" },
+    { "name": "addslice", "trigger": "!addslice", "enabled": true, "cooldownSeconds": 0, "modOnly": true, "broadcasterOnly": false, "response": "" },
+    { "name": "removeslice", "trigger": "!removeslice", "enabled": true, "cooldownSeconds": 0, "modOnly": true, "broadcasterOnly": false, "response": "" }
+  ],
+  "removeWinnerMode": false,
+  "integrations": {
+    "twitch": { "enabled": false, "channel": "", "botUsername": "", "channelPointsEnabled": false },
+    "kick": { "enabled": false, "botrixSetupComplete": false },
+    "webhook": { "enabled": true }
+  }
+}
