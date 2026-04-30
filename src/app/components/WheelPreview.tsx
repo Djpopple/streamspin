@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Socket } from 'socket.io-client'
 import type { ServerToClientEvents, ClientToServerEvents } from '@shared/events'
 import type { WheelConfig } from '@shared/config'
-import { renderFrame, preloadCustomPointer, preloadFrameOverlay } from '../../wheel/renderer'
+import { renderFrame, preloadCustomPointer, preloadFrameOverlay, preloadSegmentImage } from '../../wheel/renderer'
 import {
   computeSegmentLayout,
   createSpinAnimation,
@@ -53,6 +53,9 @@ export function WheelPreview({ config, socket, size = 480 }: Props) {
     if (config.wheel.frameImageDataUrl) {
       preloadFrameOverlay(config.wheel.frameImageDataUrl)
     }
+    if (config.wheel.segmentImageDataUrl) {
+      preloadSegmentImage(config.wheel.segmentImageDataUrl)
+    }
   }, [config])
 
   useEffect(() => {
@@ -95,6 +98,11 @@ export function WheelPreview({ config, socket, size = 480 }: Props) {
             clearTimeout(resultTimerRef.current)
             resultTimerRef.current = setTimeout(() => setResultText(null), result.duration)
           }
+
+          // Release queue after result + linger
+          const resultMs = result.enabled ? result.duration : 0
+          const lingerMs = result.lingerDuration ?? 0
+          setTimeout(() => socketRef.current?.emit('spin-done'), resultMs + lingerMs)
         }
       }
 

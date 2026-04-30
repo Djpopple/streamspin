@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh repo:*)",
+      "Bash(npm install:*)",
+      "Bash(npm audit:*)",
+      "Bash(npx tsc:*)",
+      "Bash(timeout 6 npx tsx src/server/index.ts)",
+      "Bash(npm run:*)"
+    ]
+  }
+}

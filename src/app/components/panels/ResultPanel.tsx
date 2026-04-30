@@ -3,7 +3,7 @@ import { Panel } from '../ui/Panel'
 import { Slider } from '../ui/Slider'
 import { Toggle } from '../ui/Toggle'
 import { ColorInput } from '../ui/ColorInput'
-import { Select } from '../ui/Select'
+import { FontSelect } from '../ui/FontSelect'
 import { FONTS } from '../../lib/constants'
 
 interface Props {
@@ -32,6 +32,15 @@ export function ResultPanel({ result, onChange }: Props) {
             min={1} max={15} step={0.5} decimals={1} unit="s"
             onChange={v => set('duration', v * 1000)}
           />
+          <Slider
+            label="Hold wheel after result"
+            value={(result.lingerDuration ?? 0) / 1000}
+            min={0} max={10} step={0.5} decimals={1} unit="s"
+            onChange={v => set('lingerDuration', v * 1000)}
+          />
+          <p className="text-white/25 text-xs -mt-1">
+            Extra time the wheel stays visible after the result overlay fades — useful with Reveal mode.
+          </p>
 
           <div>
             <p className="label">Message template</p>
@@ -61,7 +70,7 @@ export function ResultPanel({ result, onChange }: Props) {
           </div>
 
           {/* Text */}
-          <Select
+          <FontSelect
             label="Font"
             value={result.font}
             options={FONTS}

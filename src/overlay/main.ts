@@ -6,7 +6,7 @@ import { io } from 'socket.io-client'
 import type { ServerToClientEvents, ClientToServerEvents } from '../types/events.js'
 import type { WheelConfig } from '../types/config.js'
 import { DEFAULT_CONFIG } from '../types/config.js'
-import { renderFrame, preloadCustomPointer, preloadFrameOverlay } from '../wheel/renderer.js'
+import { renderFrame, preloadCustomPointer, preloadFrameOverlay, preloadSegmentImage } from '../wheel/renderer.js'
 import {
   computeSegmentLayout,
   createSpinAnimation,
@@ -90,12 +90,18 @@ function loop() {
       const winner = getWinnerLayout(layout, rotation, pAngle)
       const winnerSegment = config.segments[winner.index]
 
+      // Signal win immediately — triggers server-side win recording + reveal
       socket.emit('spin-complete', { winner: winnerSegment, triggeredBy })
       showResult(winnerSegment)
 
       if (config.sound.winEnabled) {
         playAudio(config.sound.winDataUrl, config.sound.winVolume)
       }
+
+      // Release the spin queue only after result overlay + linger have elapsed
+      const resultMs = config.result.enabled ? config.result.duration : 0
+      const lingerMs = (config.result.lingerDuration ?? 0)
+      setTimeout(() => socket.emit('spin-done'), resultMs + lingerMs)
 
       animation = null
     }
@@ -129,6 +135,9 @@ socket.on('config-update', ({ config: newConfig }) => {
   }
   if (config.wheel.frameImageDataUrl) {
     preloadFrameOverlay(config.wheel.frameImageDataUrl)
+  }
+  if (config.wheel.segmentImageDataUrl) {
+    preloadSegmentImage(config.wheel.segmentImageDataUrl)
   }
 })
 

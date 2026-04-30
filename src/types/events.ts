@@ -65,6 +65,7 @@ export interface ServerToClientEvents {
 // Events emitted by clients, received by the server
 export interface ClientToServerEvents {
   'spin-complete': (event: SpinCompleteEvent) => void
+  'spin-done': () => void   // emitted after result overlay + linger — releases the spin queue
   'editor-spin': () => void
 }
 

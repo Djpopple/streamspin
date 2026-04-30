@@ -1,4 +1,4 @@
-import type { WheelAppearance } from '@shared/config'
+import type { WheelAppearance, SegmentImageMode } from '@shared/config'
 import { Panel } from '../ui/Panel'
 import { Slider } from '../ui/Slider'
 import { ColorInput } from '../ui/ColorInput'
@@ -9,9 +9,10 @@ import { FONTS } from '../../lib/constants'
 interface Props {
   wheel: WheelAppearance
   onChange: (wheel: WheelAppearance) => void
+  onResetReveal?: () => void
 }
 
-export function AppearancePanel({ wheel, onChange }: Props) {
+export function AppearancePanel({ wheel, onChange, onResetReveal }: Props) {
   const set = <K extends keyof WheelAppearance>(key: K, val: WheelAppearance[K]) =>
     onChange({ ...wheel, [key]: val })
 
@@ -222,6 +223,99 @@ export function AppearancePanel({ wheel, onChange }: Props) {
         <p className="text-white/25 text-xs">
           Design a square PNG with transparent centre — see docs for artist spec.
         </p>
+      </div>
+
+      {/* Segment image */}
+      <div className="space-y-3">
+        <p className="label">Segment Image</p>
+        <p className="text-white/25 text-xs -mt-2">
+          One image fills the whole wheel — selected segments become windows into it.
+        </p>
+
+        {/* Mode picker */}
+        <div className="grid grid-cols-5 gap-1">
+          {(['none', 'all', 'alternating', 'manual', 'reveal'] as SegmentImageMode[]).map(m => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => set('segmentImageMode', m)}
+              className={`text-xs py-1.5 rounded-md border capitalize transition-colors ${
+                wheel.segmentImageMode === m
+                  ? 'border-accent bg-accent/20 text-accent'
+                  : 'border-white/10 bg-white/5 text-white/50 hover:bg-white/10'
+              }`}
+            >
+              {m}
+            </button>
+          ))}
+        </div>
+
+        {wheel.segmentImageMode !== 'none' && (
+          <>
+            {/* Upload */}
+            <label className={`flex items-center gap-2 cursor-pointer rounded-md border-2 border-dashed p-3 transition-colors ${
+              wheel.segmentImageDataUrl ? 'border-accent/50 bg-accent/5' : 'border-white/15 hover:border-white/30'
+            }`}>
+              <input
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                onChange={e => {
+                  const file = e.target.files?.[0]
+                  if (!file) return
+                  const reader = new FileReader()
+                  reader.onload = ev => set('segmentImageDataUrl', ev.target?.result as string)
+                  reader.readAsDataURL(file)
+                  e.target.value = ''
+                }}
+              />
+              {wheel.segmentImageDataUrl
+                ? <span className="text-xs text-white/60">Image loaded — click to replace</span>
+                : <span className="text-xs text-white/40">Click to upload image…</span>
+              }
+            </label>
+            {wheel.segmentImageDataUrl && (
+              <button
+                type="button"
+                className="text-xs text-white/30 hover:text-white/60 transition-colors"
+                onClick={() => set('segmentImageDataUrl', undefined)}
+              >
+                ✕ Remove image
+              </button>
+            )}
+
+            <Slider
+              label="Image opacity"
+              value={Math.round(wheel.segmentImageOpacity * 100)}
+              min={10} max={100} step={5} unit="%"
+              onChange={v => set('segmentImageOpacity', v / 100)}
+            />
+            <Slider
+              label="Text readability overlay"
+              value={Math.round(wheel.segmentImageOverlay * 100)}
+              min={0} max={80} step={5} unit="%"
+              onChange={v => set('segmentImageOverlay', v / 100)}
+            />
+            <p className="text-white/25 text-xs -mt-1">
+              Dark veil drawn over image segments so labels stay readable.
+            </p>
+
+            {wheel.segmentImageMode === 'reveal' && (
+              <div className="space-y-1.5">
+                <p className="text-white/40 text-xs">
+                  In Reveal mode, each segment shows the image permanently after it wins. Use the button below to reset all segments back to solid.
+                </p>
+                <button
+                  type="button"
+                  className="w-full text-xs py-1.5 rounded-md border border-red-400/40 text-red-400/70 hover:text-red-400 hover:border-red-400/70 transition-colors"
+                  onClick={onResetReveal}
+                >
+                  Reset all reveals
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </Panel>
   )

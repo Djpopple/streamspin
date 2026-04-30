@@ -11,11 +11,22 @@ A fully customisable, browser-source-ready spin wheel for live streamers on Twit
 - Per-segment colour picker (10-colour palette + full hex input)
 - Per-segment advanced options: text colour, gradient fill, font override, label position offset
 - Smart label sizing — all labels sit at the same radius; font scales automatically so wide segments get bigger text and narrow segments get smaller text, everything stays inside the wheel
-- Global font selector — 17 fonts including Inter, Bebas Neue, Bangers, Times New Roman, Ravie, Bradley Hand ITC, CC Zoinks, and more
+- Global font selector — **37 fonts** with live preview (each option rendered in its own typeface), grouped by style: sans-serif, condensed, display, handwriting, serif, gaming, monospace, and custom
 - Bold / italic label style toggles
 - Border, hub, glow, drop shadow, and background colour controls
 - Frame ring width control (reserves space for artist frame overlays)
 - Frame overlay upload — drop a transparent PNG designed by your artist on top of the wheel
+
+### Segment Image System
+- Upload one image that fills the entire wheel circle — segments act as windows into it
+- **Five modes:**
+  - **None** — no image, normal solid segments
+  - **All** — every segment shows the image
+  - **Alternating** — even segments show image, odd segments show solid colour
+  - **Manual** — per-segment toggle controls which segments show the image
+  - **Reveal** — segments start solid; each winning segment permanently reveals its slice of the image, building up the full picture over multiple spins
+- Image opacity and text readability overlay (dark veil) sliders
+- Reset Reveals button to wipe all segments back to solid and start a new game
 
 ### Pointer / Indicator
 - Five built-in presets: Arrow, Triangle, Pin, Gem, Hand (live canvas previews)
@@ -43,6 +54,7 @@ A fully customisable, browser-source-ready spin wheel for live streamers on Twit
 - Configurable win message with `{winner}` placeholder
 - Background colour, opacity, font, size, and text colour
 - Adjustable display duration
+- **Post-result linger** — hold the wheel on screen for an extra 0–10s after the overlay fades, useful with Reveal mode so viewers can see which slice was uncovered before the next spin fires
 - Pop-in animation shown in both the editor preview and the OBS overlay
 
 ### Platform Integrations
@@ -266,6 +278,24 @@ The preset bar runs along the top of the editor. Type a name and click **Save** 
 
 Press **Space** anywhere in the editor (as long as you're not typing in a text field) to trigger a test spin. The wheel spins in both the editor preview and the OBS overlay.
 
+### Segment Images
+
+Open the **Appearance** panel and scroll to the **Segment Image** section.
+
+1. Choose a mode — **All**, **Alternating**, **Manual**, or **Reveal**
+2. Upload your image (any format — PNG, JPG, etc.)
+3. Adjust **Image opacity** and **Text readability overlay** to taste
+
+**Reveal mode step by step:**
+
+1. Set mode to **Reveal** and upload a hidden image
+2. All segments start solid — the image is completely hidden
+3. Each time a segment wins, it permanently flips to transparent, revealing that slice of the image
+4. Progress is saved automatically — if you restart the stream, the reveal state is preserved
+5. When you're ready to start fresh, click **Reset all reveals** to return all segments to solid
+
+> **Tip:** Pair Reveal mode with the **Hold wheel after result** slider in the Result Overlay panel — set it to 2–4 seconds so viewers have time to appreciate each reveal before the next spin starts.
+
 ### Win History
 
 Open the **Win History** panel to see a log of every spin result. Hover any row to see two buttons:
@@ -384,7 +414,7 @@ This can happen if the overlay disconnected mid-spin. Right-click the OBS browse
 
 ## Roadmap
 
-Phases 0–4 complete including win history. Next: Phase 5 — Electron packaging into a single `.exe`.
+Phases 0–4 complete including segment images, reveal mode, and win history. Next: Phase 5 — Electron packaging into a single `.exe`.
 
 See [TODO.md](TODO.md) for the full breakdown.
 

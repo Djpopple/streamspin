@@ -32,6 +32,7 @@ export function migrateConfig(raw: unknown): WheelConfig {
     ...(seg.gradientColor !== undefined ? { gradientColor: seg.gradientColor } : {}),
     ...(seg.fontOverride !== undefined ? { fontOverride: seg.fontOverride } : {}),
     ...(seg.labelRadiusOffset !== undefined ? { labelRadiusOffset: seg.labelRadiusOffset } : {}),
+    ...(seg.showImage !== undefined ? { showImage: seg.showImage } : {}),
   }))
 
   // Ensure commands array is present

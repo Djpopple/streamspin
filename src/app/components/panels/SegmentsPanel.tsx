@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import type { Segment } from '@shared/config'
+import type { Segment, SegmentImageMode } from '@shared/config'
 import { Panel } from '../ui/Panel'
 import { Toggle } from '../ui/Toggle'
 import { ColorInput } from '../ui/ColorInput'
@@ -10,6 +10,7 @@ import { SEGMENT_COLORS, FONTS, generateId, cycleColor } from '../../lib/constan
 interface Props {
   segments: Segment[]
   removeWinnerMode: boolean
+  segmentImageMode: SegmentImageMode
   onChange: (segments: Segment[], removeWinnerMode?: boolean) => void
 }
 
@@ -61,6 +62,7 @@ interface SegmentRowProps {
   total: number
   colorPickerOpen: boolean
   expanded: boolean
+  segmentImageMode: SegmentImageMode
   onOpenColorPicker: () => void
   onCloseColorPicker: () => void
   onToggleExpand: () => void
@@ -73,7 +75,7 @@ interface SegmentRowProps {
 }
 
 function SegmentRow({
-  segment, index, total, colorPickerOpen, expanded,
+  segment, index, total, colorPickerOpen, expanded, segmentImageMode,
   onOpenColorPicker, onCloseColorPicker, onToggleExpand,
   onChange, onDelete, onMove,
   onDragStart, onDragOver, onDrop,
@@ -223,6 +225,16 @@ function SegmentRow({
               onChange={(v: string) => onChange({ ...segment, fontOverride: v || undefined })}
             />
           </div>
+
+          {/* Show image — only relevant in manual/reveal modes */}
+          {(segmentImageMode === 'manual' || segmentImageMode === 'reveal') && (
+            <Toggle
+              label={segmentImageMode === 'reveal' ? 'Revealed (won)' : 'Show image'}
+              checked={segment.showImage ?? false}
+              onChange={v => onChange({ ...segment, showImage: v })}
+              size="sm"
+            />
+          )}
         </div>
       )}
 
@@ -255,7 +267,7 @@ function SegmentRow({
   )
 }
 
-export function SegmentsPanel({ segments, removeWinnerMode, onChange }: Props) {
+export function SegmentsPanel({ segments, removeWinnerMode, segmentImageMode, onChange }: Props) {
   const [colorPickerIndex, setColorPickerIndex] = useState<number | null>(null)
   const [expandedSet, setExpandedSet] = useState<Set<string>>(new Set())
   const [bulkOpen, setBulkOpen] = useState(false)
@@ -370,6 +382,7 @@ export function SegmentsPanel({ segments, removeWinnerMode, onChange }: Props) {
                 onChange={seg => handleChange(i, seg)}
                 onDelete={() => handleDelete(i)}
                 onMove={dir => handleMove(i, dir)}
+                segmentImageMode={segmentImageMode}
                 onDragStart={() => handleDragStart(i)}
                 onDragOver={e => handleDragOver(e, i)}
                 onDrop={handleDrop}

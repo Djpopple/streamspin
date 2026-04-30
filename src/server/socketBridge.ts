@@ -9,7 +9,7 @@ import type {
   SocketData,
   SpinEvent,
 } from '../types/events.js'
-import { readConfig } from './configStore.js'
+import { readConfig, writeConfig } from './configStore.js'
 import { addWin } from './historyStore.js'
 import { randomUUID } from 'crypto'
 
@@ -31,7 +31,8 @@ export function setupSocketBridge(io: IO): void {
       enqueueSpin(io, { triggeredBy: 'editor' })
     })
 
-    // Overlay reports spin complete — record win and process next in queue
+    // Overlay reports wheel stopped + winner — record win and trigger reveal if active.
+    // Does NOT release the spin queue — spin-done does that after linger.
     socket.on('spin-complete', (event) => {
       console.log(`Spin complete — winner: ${event.winner.label} (triggered by ${event.triggeredBy})`)
       const record = {
@@ -42,10 +43,24 @@ export function setupSocketBridge(io: IO): void {
         triggeredBy: event.triggeredBy,
       }
       addWin(record)
-      // Push to editor clients only (overlay doesn't need history)
       for (const s of io.sockets.sockets.values()) {
         if (s.data.clientType === 'editor') s.emit('win-recorded', record)
       }
+
+      // Reveal mode: flip winning segment showImage → true, persist, broadcast
+      const config = readConfig()
+      if (config.wheel.segmentImageMode === 'reveal') {
+        const seg = config.segments.find(s => s.id === event.winner.id)
+        if (seg && !seg.showImage) {
+          seg.showImage = true
+          writeConfig(config)
+          io.emit('config-update', { config })
+        }
+      }
+    })
+
+    // Overlay signals it is ready for the next spin (after result overlay + linger).
+    socket.on('spin-done', () => {
       spinning = false
       processQueue(io)
     })

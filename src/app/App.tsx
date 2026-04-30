@@ -204,6 +204,7 @@ function App() {
             <SegmentsPanel
               segments={config.segments}
               removeWinnerMode={config.removeWinnerMode}
+              segmentImageMode={config.wheel.segmentImageMode}
               onChange={(segments, rwm) => {
                 const next: Partial<WheelConfig> = { segments }
                 if (rwm !== undefined) next.removeWinnerMode = rwm
@@ -214,6 +215,12 @@ function App() {
             <AppearancePanel
               wheel={config.wheel}
               onChange={wheel => patchConfig('wheel', wheel)}
+              onResetReveal={() =>
+                setConfig(prev => ({
+                  ...prev,
+                  segments: prev.segments.map(s => ({ ...s, showImage: false })),
+                }))
+              }
             />
 
             <PointerPanel

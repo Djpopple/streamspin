@@ -92,6 +92,25 @@ Legend: `[x]` = done, `[ ]` = todo, `[-]` = deferred / won't do this phase
 
 ---
 
+## Phase 4c — Segment Images + Reveal ✅
+- [x] **Segment image system** — one image fills the whole wheel circle; segments act as windows into it
+  - [x] Mode selector: None / All / Alternating / Manual / Reveal
+  - [x] Image opacity slider (how strongly the image shows through)
+  - [x] Text readability overlay slider (dark veil over image segments so labels stay legible)
+  - [x] Per-segment `showImage` toggle visible in Manual and Reveal modes
+  - [x] Upload any image format; stored as data URL like frame overlay
+- [x] **Reveal mode** — segments start solid; each winning segment permanently reveals its slice of the image
+  - [x] Server-side: `spin-complete` flips `showImage = true`, saves config, broadcasts update
+  - [x] Progress persists across restarts (saved in config.json)
+  - [x] Reset Reveals button wipes all segments back to solid
+- [x] **Spin queue timing split**
+  - [x] `spin-complete` fires immediately when wheel stops (triggers win recording + reveal)
+  - [x] `spin-done` fires after result overlay + linger (releases queue for next spin)
+- [x] **Post-result linger** — new slider in Result Overlay panel (0–10s); wheel stays on screen after overlay fades before next spin can start
+- [x] 37-font selector with live font preview dropdown (each option rendered in its own typeface)
+
+---
+
 ## Phase 5 — Distribution (Next)
 - [ ] Electron wrapper — bundle server + editor into single `.exe` / `.dmg`
 - [ ] Auto-updater (Electron)
@@ -100,7 +119,6 @@ Legend: `[x]` = done, `[ ]` = todo, `[-]` = deferred / won't do this phase
 ---
 
 ## Backlog / Future
-- [ ] Segment images — per-segment icon/PNG rendered inside the arc
 - [ ] Animated segment backgrounds (GIF/video fills)
 - [ ] Viewer-submitted entry queue (`!addme`)
 - [ ] TikTok / YouTube Live integration

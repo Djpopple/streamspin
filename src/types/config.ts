@@ -2,6 +2,8 @@
 // Both the server (reads/writes config.json) and the React app (editor UI)
 // import from here. Keep it in sync with config.json.example.
 
+export type SegmentImageMode = 'none' | 'all' | 'alternating' | 'manual' | 'reveal'
+
 export interface Segment {
   id: string
   label: string
@@ -12,6 +14,7 @@ export interface Segment {
   enabled: boolean
   fontOverride?: string
   labelRadiusOffset?: number  // fraction of radius to shift label in/out (-0.4 … +0.4)
+  showImage?: boolean         // whether this segment reveals the segment image
 }
 
 export type PointerPreset =
@@ -62,11 +65,16 @@ export interface WheelAppearance {
   frameImageDataUrl?: string    // base64 PNG frame overlay rendered on top of wheel
   labelBold: boolean
   labelItalic: boolean
+  segmentImageMode: SegmentImageMode
+  segmentImageDataUrl?: string  // base64 image revealed behind segments
+  segmentImageOpacity: number   // 0 – 1
+  segmentImageOverlay: number   // 0 – 1 dark veil over image segments for text readability
 }
 
 export interface ResultDisplay {
   enabled: boolean
   duration: number              // ms to show the result overlay
+  lingerDuration: number        // ms to hold wheel on screen after overlay dismisses
   messageTemplate: string       // supports {winner} placeholder
   backgroundColor: string
   backgroundOpacity: number     // 0.0 – 1.0
@@ -150,6 +158,9 @@ export const DEFAULT_CONFIG: WheelConfig = {
     frameEnabled: false,
     labelBold: false,
     labelItalic: false,
+    segmentImageMode: 'none',
+    segmentImageOpacity: 1,
+    segmentImageOverlay: 0.35,
   },
   segments: [
     { id: '1', label: 'Prize 1', color: '#e94560', textColor: '#ffffff', weight: 1, enabled: true },
@@ -176,6 +187,7 @@ export const DEFAULT_CONFIG: WheelConfig = {
   result: {
     enabled: true,
     duration: 4000,
+    lingerDuration: 0,
     messageTemplate: '🎉 {winner} 🎉',
     backgroundColor: '#000000',
     backgroundOpacity: 0.75,

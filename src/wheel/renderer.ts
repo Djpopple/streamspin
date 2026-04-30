@@ -7,7 +7,7 @@
 //   • Angles increase CLOCKWISE; 0 = 3 o'clock
 //   • Wheel centre = (cx, cy)
 
-import type { WheelConfig } from '../types/config.js'
+import type { WheelConfig, SegmentImageMode } from '../types/config.js'
 import type { SegmentLayout } from './physics.js'
 import {
   POINTER_PRESETS,
@@ -55,6 +55,7 @@ export function renderFrame(
   applyShadow(ctx, config)
   applyGlow(ctx, config)
   drawSegments(ctx, config, layout, cx, cy, radius, rotation)
+  drawSegmentImages(ctx, config, layout, cx, cy, radius, rotation)
   clearGlow(ctx)
   clearShadow(ctx)
 
@@ -105,6 +106,77 @@ function drawSegments(
     ctx.strokeStyle = 'rgba(0,0,0,0.15)'
     ctx.lineWidth = 1
     ctx.stroke()
+  }
+}
+
+// ── Segment image overlay ─────────────────────────────────────────────────────
+
+const _segmentImageCache = new Map<string, HTMLImageElement>()
+
+export function preloadSegmentImage(dataUrl: string): void {
+  if (_segmentImageCache.has(dataUrl)) return
+  const img = new Image()
+  img.onload = () => _segmentImageCache.set(dataUrl, img)
+  img.src = dataUrl
+}
+
+function segmentShouldShowImage(
+  showImage: boolean | undefined,
+  index: number,
+  mode: SegmentImageMode
+): boolean {
+  switch (mode) {
+    case 'all': return true
+    case 'alternating': return index % 2 === 0
+    case 'manual':
+    case 'reveal': return showImage ?? false
+    default: return false
+  }
+}
+
+function drawSegmentImages(
+  ctx: CanvasRenderingContext2D,
+  config: WheelConfig,
+  layout: SegmentLayout[],
+  cx: number, cy: number, radius: number,
+  rotation: number
+): void {
+  const mode = config.wheel.segmentImageMode ?? 'none'
+  if (mode === 'none') return
+  const dataUrl = config.wheel.segmentImageDataUrl
+  if (!dataUrl) return
+  const img = _segmentImageCache.get(dataUrl)
+  if (!img) return
+
+  const opacity = config.wheel.segmentImageOpacity ?? 1
+  const overlay = config.wheel.segmentImageOverlay ?? 0.35
+
+  for (const seg of layout) {
+    const segment = config.segments[seg.index]
+    if (!segmentShouldShowImage(segment.showImage, seg.index, mode)) continue
+
+    const start = rotation + seg.start
+    const end   = rotation + seg.start + seg.span
+
+    ctx.save()
+    ctx.beginPath()
+    ctx.moveTo(cx, cy)
+    ctx.arc(cx, cy, radius, start, end)
+    ctx.closePath()
+    ctx.clip()
+
+    // Draw image scaled to fill the full wheel circle
+    ctx.globalAlpha = opacity
+    ctx.drawImage(img, cx - radius, cy - radius, radius * 2, radius * 2)
+    ctx.globalAlpha = 1
+
+    // Dark veil for text readability
+    if (overlay > 0) {
+      ctx.fillStyle = `rgba(0,0,0,${overlay})`
+      ctx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2)
+    }
+
+    ctx.restore()
   }
 }
 

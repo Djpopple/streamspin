@@ -233,3 +233,8 @@ OBS overlay: `http://localhost:3000/wheel` (always this URL, even in dev)
 - Themed preset files in presets/ folder
 - CC Zoinks font wired via @font-face from public/assets/fonts/
 - Win history panel (historyStore.ts + HistoryPanel.tsx) — persisted, live socket updates, per-row remove and inline edit
+- 37-font selector with live font preview dropdown (FontSelect.tsx — each option renders in its own typeface)
+- Segment image system: one image fills the wheel circle, segments reveal it in modes: none/all/alternating/manual/reveal
+- Reveal mode: spin-complete triggers server-side showImage flip + config-update broadcast; spin-done (after linger) releases queue
+- Post-result linger slider (lingerDuration on ResultDisplay) — wheel holds on screen after overlay fades before next spin fires
+- spin-complete / spin-done event split: complete = win recorded + reveal; done = queue released
