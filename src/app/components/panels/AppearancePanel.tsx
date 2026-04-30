@@ -279,11 +279,37 @@ export function AppearancePanel({ wheel, onChange, onResetReveal }: Props) {
           />
         )}
         {wheel.ambientEffect !== 'none' && (
-          <p className="text-white/25 text-xs -mt-1">
-            {wheel.ambientEffect === 'silver-stars'  && 'White 4-pointed stars drift outward from the wheel centre and pulse.'}
-            {wheel.ambientEffect === 'gold-sparkles' && 'Gold sparkles scattered across the canvas twinkle in and out.'}
-            {wheel.ambientEffect === 'sakura'        && 'Pink cherry blossom petals fall gently across the canvas.'}
-          </p>
+          <>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => set('ambientEffectScope', 'all')}
+                className={`flex-1 text-xs py-1.5 rounded-md border transition-colors ${
+                  (wheel.ambientEffectScope ?? 'all') === 'all'
+                    ? 'border-accent bg-accent/20 text-accent'
+                    : 'border-white/10 bg-white/5 text-white/60 hover:bg-white/10'
+                }`}
+              >
+                Over wheel
+              </button>
+              <button
+                type="button"
+                onClick={() => set('ambientEffectScope', 'outside')}
+                className={`flex-1 text-xs py-1.5 rounded-md border transition-colors ${
+                  wheel.ambientEffectScope === 'outside'
+                    ? 'border-accent bg-accent/20 text-accent'
+                    : 'border-white/10 bg-white/5 text-white/60 hover:bg-white/10'
+                }`}
+              >
+                Outside only
+              </button>
+            </div>
+            <p className="text-white/25 text-xs -mt-1">
+              {wheel.ambientEffect === 'silver-stars'  && 'White 4-pointed stars drift outward from the wheel centre and pulse.'}
+              {wheel.ambientEffect === 'gold-sparkles' && 'Gold sparkles scattered across the canvas twinkle in and out.'}
+              {wheel.ambientEffect === 'sakura'        && 'Pink cherry blossom petals fall gently across the canvas.'}
+            </p>
+          </>
         )}
       </div>
 

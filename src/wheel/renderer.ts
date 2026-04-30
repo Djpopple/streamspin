@@ -65,7 +65,21 @@ export function renderFrame(
   drawHub(ctx, config, cx, cy)
   drawLabels(ctx, config, layout, cx, cy, radius, rotation)
   drawPointer(ctx, config, cx, cy, radius)
-  drawAmbientEffects(ctx, config.wheel.ambientEffect ?? 'none', config.wheel.ambientEffectIntensity ?? 0.6, timestamp)
+
+  const _effect = config.wheel.ambientEffect ?? 'none'
+  if (_effect !== 'none') {
+    const _scope = config.wheel.ambientEffectScope ?? 'all'
+    if (_scope === 'outside') {
+      ctx.save()
+      ctx.beginPath()
+      ctx.rect(0, 0, width, height)
+      ctx.arc(cx, cy, radius, 0, TWO_PI, true) // anticlockwise = hole
+      ctx.clip('evenodd')
+    }
+    drawAmbientEffects(ctx, _effect, config.wheel.ambientEffectIntensity ?? 0.6, timestamp)
+    if (_scope === 'outside') ctx.restore()
+  }
+
   drawFrame(ctx, config, width, height)
   ctx.restore()  // ← matches top-level save
 }

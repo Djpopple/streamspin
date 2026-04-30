@@ -74,6 +74,7 @@ export interface WheelAppearance {
   segmentImageOverlay: number   // 0 – 1 dark veil over image segments for text readability
   ambientEffect: AmbientEffect
   ambientEffectIntensity: number  // 0.2 – 1.0
+  ambientEffectScope: 'all' | 'outside'  // 'all' = over wheel, 'outside' = ring only
 }
 
 export interface ResultDisplay {
@@ -168,6 +169,7 @@ export const DEFAULT_CONFIG: WheelConfig = {
     segmentImageOverlay: 0.35,
     ambientEffect: 'none',
     ambientEffectIntensity: 0.6,
+    ambientEffectScope: 'all',
   },
   segments: [
     { id: '1', label: 'Prize 1', color: '#e94560', textColor: '#ffffff', weight: 1, enabled: true },

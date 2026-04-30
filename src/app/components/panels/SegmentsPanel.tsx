@@ -5,7 +5,7 @@ import { Toggle } from '../ui/Toggle'
 import { ColorInput } from '../ui/ColorInput'
 import { FontSelect } from '../ui/FontSelect'
 import { Slider } from '../ui/Slider'
-import { SEGMENT_COLORS, FONTS, generateId, cycleColor } from '../../lib/constants'
+import { FONTS, generateId, cycleColor } from '../../lib/constants'
 
 interface Props {
   segments: Segment[]
@@ -14,57 +14,12 @@ interface Props {
   onChange: (segments: Segment[], removeWinnerMode?: boolean) => void
 }
 
-function ColorPicker({ value, onChange }: { value: string; onChange: (c: string) => void }) {
-  const inputRef = useRef<HTMLInputElement>(null)
-  return (
-    <div className="absolute top-full left-0 z-20 mt-1 p-3 bg-surface-overlay rounded-lg border border-white/15 shadow-xl w-72">
-      <div className="grid grid-cols-10 gap-1.5 mb-3">
-        {SEGMENT_COLORS.map(c => (
-          <button
-            key={c}
-            type="button"
-            title={c}
-            style={{ backgroundColor: c }}
-            className={`w-5 h-5 rounded-full border-2 transition-transform hover:scale-110 ${value === c ? 'border-white' : 'border-transparent'}`}
-            onClick={() => onChange(c)}
-          />
-        ))}
-      </div>
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          style={{ backgroundColor: value }}
-          className="w-6 h-6 rounded border border-white/20 shrink-0"
-          onClick={() => inputRef.current?.click()}
-        />
-        <input
-          ref={inputRef}
-          type="color"
-          value={value}
-          onChange={e => onChange(e.target.value)}
-          className="sr-only"
-        />
-        <input
-          type="text"
-          value={value}
-          onChange={e => { if (/^#[0-9a-fA-F]{0,6}$/.test(e.target.value)) onChange(e.target.value) }}
-          className="input text-xs py-1 font-mono"
-          maxLength={7}
-        />
-      </div>
-    </div>
-  )
-}
-
 interface SegmentRowProps {
   segment: Segment
   index: number
   total: number
-  colorPickerOpen: boolean
   expanded: boolean
   segmentImageMode: SegmentImageMode
-  onOpenColorPicker: () => void
-  onCloseColorPicker: () => void
   onToggleExpand: () => void
   onChange: (seg: Segment) => void
   onDelete: () => void
@@ -75,9 +30,8 @@ interface SegmentRowProps {
 }
 
 function SegmentRow({
-  segment, index, total, colorPickerOpen, expanded, segmentImageMode,
-  onOpenColorPicker, onCloseColorPicker, onToggleExpand,
-  onChange, onDelete, onMove,
+  segment, index, total, expanded, segmentImageMode,
+  onToggleExpand, onChange, onDelete, onMove,
   onDragStart, onDragOver, onDrop,
 }: SegmentRowProps) {
   const hasGradient = segment.gradientColor !== undefined
@@ -90,7 +44,7 @@ function SegmentRow({
     >
       {/* ── Main row ── */}
       <div className="flex items-center gap-2 p-2">
-        {/* Drag handle — only this element is draggable */}
+        {/* Drag handle */}
         <span
           className="text-white/20 hover:text-white/50 cursor-grab active:cursor-grabbing text-xs select-none shrink-0 px-0.5"
           title="Drag to reorder"
@@ -98,21 +52,12 @@ function SegmentRow({
           onDragStart={onDragStart}
         >⠿</span>
 
-        {/* Color swatch + picker */}
-        <div className="relative shrink-0">
-          <button
-            type="button"
-            style={{ backgroundColor: segment.color }}
-            className="w-7 h-7 rounded-md border-2 border-white/25 hover:border-white/60 transition-colors"
-            onClick={colorPickerOpen ? onCloseColorPicker : onOpenColorPicker}
-          />
-          {colorPickerOpen && (
-            <ColorPicker
-              value={segment.color}
-              onChange={c => onChange({ ...segment, color: c })}
-            />
-          )}
-        </div>
+        {/* Colour swatch — opens unified palette dropdown */}
+        <ColorInput
+          compact
+          value={segment.color}
+          onChange={c => onChange({ ...segment, color: c })}
+        />
 
         {/* Label */}
         <input
@@ -315,7 +260,6 @@ function SegmentRow({
 }
 
 export function SegmentsPanel({ segments, removeWinnerMode, segmentImageMode, onChange }: Props) {
-  const [colorPickerIndex, setColorPickerIndex] = useState<number | null>(null)
   const [expandedSet, setExpandedSet] = useState<Set<string>>(new Set())
   const [bulkOpen, setBulkOpen] = useState(false)
   const [bulkText, setBulkText] = useState('')
@@ -329,11 +273,6 @@ export function SegmentsPanel({ segments, removeWinnerMode, segmentImageMode, on
     })
   }
 
-  const update = (segs: Segment[], rwm?: boolean) => {
-    onChange(segs, rwm)
-    setColorPickerIndex(null)
-  }
-
   const handleChange = (i: number, seg: Segment) => {
     const next = [...segments]
     next[i] = seg
@@ -343,7 +282,7 @@ export function SegmentsPanel({ segments, removeWinnerMode, segmentImageMode, on
   const handleDelete = (i: number) => {
     if (segments.length <= 2) return
     setExpandedSet(prev => { const s = new Set(prev); s.delete(segments[i].id); return s })
-    update(segments.filter((_, idx) => idx !== i))
+    onChange(segments.filter((_, idx) => idx !== i))
   }
 
   const handleMove = (i: number, dir: -1 | 1) => {
@@ -351,7 +290,7 @@ export function SegmentsPanel({ segments, removeWinnerMode, segmentImageMode, on
     const j = i + dir
     if (j < 0 || j >= next.length) return
     ;[next[i], next[j]] = [next[j], next[i]]
-    update(next)
+    onChange(next)
   }
 
   const handleAdd = () => {
@@ -363,7 +302,7 @@ export function SegmentsPanel({ segments, removeWinnerMode, segmentImageMode, on
       weight: 1,
       enabled: true,
     }
-    update([...segments, newSeg])
+    onChange([...segments, newSeg])
   }
 
   const handleDragStart = (i: number) => { dragIndexRef.current = i }
@@ -395,7 +334,7 @@ export function SegmentsPanel({ segments, removeWinnerMode, segmentImageMode, on
       weight: 1,
       enabled: true,
     }))
-    update([...segments, ...newSegs])
+    onChange([...segments, ...newSegs])
     setBulkText('')
     setBulkOpen(false)
   }
@@ -403,77 +342,71 @@ export function SegmentsPanel({ segments, removeWinnerMode, segmentImageMode, on
   const enabledCount = segments.filter(s => s.enabled).length
 
   return (
-    <div onClick={() => setColorPickerIndex(null)}>
-      <Panel title="Segments" badge={`${enabledCount}/${segments.length}`}>
+    <Panel title="Segments" badge={`${enabledCount}/${segments.length}`}>
 
-        <Toggle
-          label="Remove winner after spin"
-          description="Winning segment is removed each spin"
-          checked={removeWinnerMode}
-          onChange={v => onChange(segments, v)}
-          size="sm"
-        />
+      <Toggle
+        label="Remove winner after spin"
+        description="Winning segment is removed each spin"
+        checked={removeWinnerMode}
+        onChange={v => onChange(segments, v)}
+        size="sm"
+      />
 
-        <div className="space-y-1.5">
-          {segments.map((seg, i) => (
-            <div key={seg.id} onClick={e => e.stopPropagation()}>
-              <SegmentRow
-                segment={seg}
-                index={i}
-                total={segments.length}
-                colorPickerOpen={colorPickerIndex === i}
-                expanded={expandedSet.has(seg.id)}
-                onOpenColorPicker={() => setColorPickerIndex(i)}
-                onCloseColorPicker={() => setColorPickerIndex(null)}
-                onToggleExpand={() => toggleExpanded(seg.id)}
-                onChange={seg => handleChange(i, seg)}
-                onDelete={() => handleDelete(i)}
-                onMove={dir => handleMove(i, dir)}
-                segmentImageMode={segmentImageMode}
-                onDragStart={() => handleDragStart(i)}
-                onDragOver={e => handleDragOver(e, i)}
-                onDrop={handleDrop}
-              />
-            </div>
-          ))}
-        </div>
+      <div className="space-y-1.5">
+        {segments.map((seg, i) => (
+          <SegmentRow
+            key={seg.id}
+            segment={seg}
+            index={i}
+            total={segments.length}
+            expanded={expandedSet.has(seg.id)}
+            onToggleExpand={() => toggleExpanded(seg.id)}
+            onChange={seg => handleChange(i, seg)}
+            onDelete={() => handleDelete(i)}
+            onMove={dir => handleMove(i, dir)}
+            segmentImageMode={segmentImageMode}
+            onDragStart={() => handleDragStart(i)}
+            onDragOver={e => handleDragOver(e, i)}
+            onDrop={handleDrop}
+          />
+        ))}
+      </div>
 
-        <div className="flex gap-2">
-          <button type="button" className="btn-primary text-xs flex-1 py-1.5" onClick={handleAdd}>
-            + Add Segment
-          </button>
-          <button
-            type="button"
-            className="btn-secondary text-xs px-3 py-1.5"
-            onClick={() => setBulkOpen(o => !o)}
-          >
-            Bulk
-          </button>
-        </div>
+      <div className="flex gap-2">
+        <button type="button" className="btn-primary text-xs flex-1 py-1.5" onClick={handleAdd}>
+          + Add Segment
+        </button>
+        <button
+          type="button"
+          className="btn-secondary text-xs px-3 py-1.5"
+          onClick={() => setBulkOpen(o => !o)}
+        >
+          Bulk
+        </button>
+      </div>
 
-        {bulkOpen && (
-          <div className="space-y-2">
-            <textarea
-              value={bulkText}
-              onChange={e => setBulkText(e.target.value)}
-              placeholder={'One per line, or comma-separated:\nPrize A\nPrize B\nPrize C'}
-              className="input text-sm resize-none h-28 font-mono"
-            />
-            <div className="flex gap-2">
-              <button type="button" className="btn-primary text-xs flex-1 py-1.5" onClick={handleBulkImport}>
-                Import
-              </button>
-              <button type="button" className="btn-secondary text-xs px-3 py-1.5" onClick={() => setBulkOpen(false)}>
-                Cancel
-              </button>
-            </div>
+      {bulkOpen && (
+        <div className="space-y-2">
+          <textarea
+            value={bulkText}
+            onChange={e => setBulkText(e.target.value)}
+            placeholder={'One per line, or comma-separated:\nPrize A\nPrize B\nPrize C'}
+            className="input text-sm resize-none h-28 font-mono"
+          />
+          <div className="flex gap-2">
+            <button type="button" className="btn-primary text-xs flex-1 py-1.5" onClick={handleBulkImport}>
+              Import
+            </button>
+            <button type="button" className="btn-secondary text-xs px-3 py-1.5" onClick={() => setBulkOpen(false)}>
+              Cancel
+            </button>
           </div>
-        )}
-
-        <div className="pt-1">
-          <p className="text-white/25 text-xs">Weight = relative probability. Min 2 segments. Drag to reorder.</p>
         </div>
-      </Panel>
-    </div>
+      )}
+
+      <div className="pt-1">
+        <p className="text-white/25 text-xs">Weight = relative probability. Min 2 segments. Drag to reorder.</p>
+      </div>
+    </Panel>
   )
 }
