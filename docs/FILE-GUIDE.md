@@ -62,11 +62,19 @@ Ready-to-import wheel themes. Each file is a complete wheel setup that a streame
 
 | File | Theme |
 |---|---|
-| `halloween.json` | Dark orange and purple spooky theme |
-| `goth.json` | Black, deep red, and silver aesthetic |
-| `cutesy.json` | Pastel pinks and soft colours |
-| `cottage-core.json` | Earthy greens and warm naturals |
-| `christmas.json` | Red, green, and gold festive theme |
+| `neon-arcade.json` | Glow, Orbitron font, neon colours, linger |
+| `gradient-vibes.json` | Per-segment gradient fills, Lobster font |
+| `streamer-classic.json` | Clean border, hub, drop shadow, Montserrat |
+| `bouncy-fast.json` | Bounce physics, fast spin, Bangers font |
+| `slow-drift.json` | Very slow expo spin, italic labels, Satisfy font |
+| `gaming-pixels.json` | Press Start 2P, solid background, glow |
+| `weighted-jackpot.json` | Rarity weights, Russo One font |
+| `elegant-evening.json` | Playfair Display italic, gold/dark palette |
+| `handwriting-fun.json` | Permanent Marker, bounce, no border |
+| `big-reveal.json` | Alternating segment image mode, 5s linger |
+| `remove-winner-gauntlet.json` | Remove winner mode, 10 viewer slots |
+| `minimal-zen.json` | No border/hub/shadow/glow, very slow, muted |
+| `blue-asmr.json` | Soft blue palette, ambient particle effects |
 
 ---
 
@@ -105,9 +113,10 @@ The pure drawing engine. This code has no idea it's inside a web app — it just
 
 | File | What it does |
 |---|---|
-| `renderer.ts` | Draws a single frame of the wheel — segments, labels, colours, shadows, gradients, pointer, frame overlay |
+| `renderer.ts` | Draws a single frame of the wheel — segments, labels, colours, shadows, gradients, pointer, ambient effects, frame overlay |
 | `physics.ts` | Calculates how the wheel spins — speed, deceleration, and which segment wins |
 | `pointers.ts` | Draws the built-in pointer shapes (arrow, triangle, pin, etc.) directly onto the canvas |
+| `effects.ts` | Draws ambient particle effects (stars, sparkles, sakura, hearts, snow, confetti, fireflies) over the wheel each frame |
 
 ---
 
@@ -129,7 +138,7 @@ The editor — the page you open in your browser to customise the wheel.
 |---|---|
 | `main.tsx` | The entry point that starts the editor page |
 | `index.css` | Global styles — custom fonts, scrollbar appearance, animations |
-| `App.tsx` | The root of the editor — holds all the settings in memory, saves them automatically, connects to the server via socket, and handles the Space bar shortcut for test spins |
+| `App.tsx` | The root of the editor — holds all the settings in memory, manages undo/redo history, saves automatically, connects to the server via socket, and handles keyboard shortcuts (Space, Ctrl+Z/Y) |
 
 #### `src/app/lib/`
 
@@ -156,7 +165,7 @@ Each panel is one collapsible section in the editor sidebar.
 | File | What it controls |
 |---|---|
 | `SegmentsPanel.tsx` | Adding, removing, reordering, and styling individual wheel segments — labels, colours, gradients, fonts, position |
-| `AppearancePanel.tsx` | Overall wheel look — background colour, font size, bold/italic, drop shadow, glow, frame overlay image, frame ring width |
+| `AppearancePanel.tsx` | Overall wheel look — background colour, font size, bold/italic, drop shadow, glow, ambient effects, frame overlay image, segment image system |
 | `PointerPanel.tsx` | The pointer style — built-in shapes or a custom image, plus rotation adjustment |
 | `SpinSettingsPanel.tsx` | How the wheel spins — minimum and maximum spin duration, easing curve, and any spin delays |
 | `ResultPanel.tsx` | The winner announcement that appears after a spin — text, colours, font, display duration |

@@ -60,7 +60,7 @@ streamspin/
 ├── overlay.html            Vite entry: OBS overlay (no React)
 ├── src/
 │   ├── app/                React editor UI
-│   │   ├── App.tsx         Root — config state, debounced save, socket
+│   │   ├── App.tsx         Root — config state, undo/redo, debounced save, socket
 │   │   ├── index.css       Tailwind base + component classes
 │   │   ├── main.tsx        React entry point
 │   │   ├── lib/
@@ -74,32 +74,43 @@ streamspin/
 │   │       │   ├── AppearancePanel.tsx
 │   │       │   ├── PointerPanel.tsx
 │   │       │   ├── SpinSettingsPanel.tsx
-│   │       │   └── ResultPanel.tsx
+│   │       │   ├── ResultPanel.tsx
+│   │       │   ├── IntegrationsPanel.tsx
+│   │       │   └── HistoryPanel.tsx
 │   │       └── ui/
 │   │           ├── Panel.tsx       Collapsible section wrapper
 │   │           ├── Slider.tsx
 │   │           ├── ColorInput.tsx
 │   │           ├── Toggle.tsx
 │   │           ├── NumberInput.tsx
-│   │           └── Select.tsx
+│   │           ├── Select.tsx
+│   │           └── FontSelect.tsx
 │   ├── wheel/              Pure renderer — NO React, NO DOM except Canvas
-│   │   ├── renderer.ts     renderFrame(ctx, config, layout, rotation)
+│   │   ├── renderer.ts     renderFrame(ctx, config, layout, rotation, timestamp)
 │   │   ├── physics.ts      computeSegmentLayout, createSpinAnimation, tickAnimation
-│   │   └── pointers.ts     Canvas-drawn pointer presets + rotation helpers
+│   │   ├── pointers.ts     Canvas-drawn pointer presets + rotation helpers
+│   │   └── effects.ts      drawAmbientEffects — 8 particle types, frame-rate-independent
 │   ├── overlay/
 │   │   └── main.ts         OBS overlay entry — Socket.io + rAF render loop
 │   ├── server/
 │   │   ├── index.ts        Express app + Socket.io server
 │   │   ├── configStore.ts  Atomic read/write of config.json
 │   │   ├── presetsStore.ts Atomic read/write of presets.json
-│   │   ├── socketBridge.ts Spin queue + event routing
+│   │   ├── historyStore.ts In-memory win history + history.json persistence
+│   │   ├── migration.ts    migrateConfig() — deep-merges against DEFAULT_CONFIG
+│   │   ├── socketBridge.ts Spin queue + event routing + win recording
+│   │   ├── tokenStore.ts   Twitch OAuth token storage + auto-refresh
+│   │   ├── integrationManager.ts  Twitch chat + EventSub lifecycle
 │   │   └── routes/
 │   │       ├── config.ts   GET/POST /api/config
 │   │       ├── trigger.ts  POST /api/trigger (webhook / Stream Deck)
 │   │       ├── presets.ts  CRUD /api/presets + /api/presets/:id/load
-│   │       └── auth.ts     /auth/twitch OAuth (Phase 3)
-│   ├── integrations/       Platform chat connectors (Phase 3)
+│   │       ├── auth.ts     /auth/twitch OAuth
+│   │       └── history.ts  GET/DELETE /api/history, DELETE/PATCH /api/history/:id
+│   ├── integrations/
 │   │   └── twitch/
+│   │       ├── chat.ts     tmi.js — !spin, !addslice, !removeslice, per-user cooldowns
+│   │       └── eventsub.ts Native WebSocket EventSub — Channel Points, auto-fulfil
 │   └── types/              Shared types — imported by app, server, overlay
 │       ├── config.ts       WheelConfig master schema + DEFAULT_CONFIG
 │       └── events.ts       Typed Socket.io event maps
@@ -121,14 +132,15 @@ Communication with the server:
 - `GET /api/config` — initial config load on mount
 - `POST /api/config` — 400ms debounced auto-save on every change
 - `GET/POST/PUT/DELETE /api/presets` — preset management
-- Socket.io — test spin events, future integration status
+- `GET/POST/PATCH/DELETE /api/history` — win history
+- Socket.io — spin events, integration status, live history updates
 
 ### Overlay (`/wheel`)
 A minimal Vite-compiled page — no React, no framework. Contains one `<canvas>` and one result `<div>`. Loaded into OBS as a Browser Source and left running.
 
 - On connect: receives current config via `config-update`
 - Runs a continuous `requestAnimationFrame` loop (no idle state, always 60fps)
-- Responds to `spin` events: starts animation, plays audio, shows result overlay, emits `spin-complete`
+- Responds to `spin` events: starts animation, plays audio, shows result overlay, emits `spin-complete` then `spin-done`
 - Responds to `config-update`: replaces config and recomputes segment layout
 
 ---
@@ -142,23 +154,29 @@ function renderFrame(
   ctx: CanvasRenderingContext2D,
   config: WheelConfig,
   layout: SegmentLayout[],    // pre-computed from computeSegmentLayout()
-  rotation: number            // current wheel rotation in radians
+  rotation: number,           // current wheel rotation in radians
+  timestamp?: number          // performance.now() — used by ambient effects
 ): void
 ```
 
-**Zero side effects. Zero internal state.** Called every animation frame at 60fps.
+**Zero side effects. Zero internal state.** Called every animation frame at 60fps. Wrapped in a top-level `ctx.save()`/`ctx.restore()` guard. Both call sites wrap in `try/catch` so a renderer error never kills the rAF loop.
 
 `layout` is computed once per segment change via `computeSegmentLayout(segments)`, not on every frame.
 
 ### Rendering order (painter's algorithm)
-1. Clear canvas
-2. Glow shadow (`ctx.shadowBlur`) — if enabled
-3. Segment arcs (fill + inner separator stroke)
-4. Clear glow
-5. Outer wheel border
-6. Hub (circle + sheen radial gradient)
-7. Segment labels (radial text, rotated to face outward)
-8. Pointer (positioned at wheel edge, rotated inward)
+1. `clearRect` — clear canvas
+2. Background fill (if not transparent)
+3. Drop shadow circle (opaque fill + ctx.shadow*, covered by segments)
+4. Glow (`ctx.shadowBlur`) — if enabled
+5. Segment arcs (fill + inner separator stroke)
+6. Segment image overlay (clipped arc slice per segment)
+7. Clear glow
+8. Outer wheel border
+9. Hub (circle + sheen radial gradient)
+10. Segment labels (radial text, rotated to face outward)
+11. Pointer (positioned at wheel edge, rotated inward)
+12. Ambient effects (all or outside-only via evenodd clip)
+13. Frame overlay (artist PNG scaled to canvas)
 
 ### Pointer system
 All five presets are drawn in `src/wheel/pointers.ts` as canvas drawing functions in **pointing-right (+x) orientation**. `getPointerRotation(position)` returns the `ctx.rotate()` value needed to make any preset face inward from any of the four positions. `getPointerOrigin(position, radius, gap)` returns the (x, y) placement offset.
@@ -181,6 +199,55 @@ targetAngle = currentAngle + ((pointerAngle - winner.mid) mod 2π) + rotations �
 ### Easing
 `tickAnimation(anim, now)` returns `{ angle, progress, complete }` each frame.
 Three built-in curves: `ease-out-cubic`, `ease-out-quint`, `ease-out-expo`. Bounce applies a small sinusoidal overshoot in the final 15% of the animation.
+
+---
+
+## Ambient Effects System
+
+`src/wheel/effects.ts` — pure Canvas 2D, no assets, no external libraries.
+
+`drawAmbientEffects(ctx, effect, intensity, timestamp)` is called from `renderFrame` after the pointer. It manages a module-level `_particles` array, updating positions using frame-rate-independent `dt` (capped at 50ms to handle tab-switch pauses), then drawing each particle.
+
+**Scope control** in `renderer.ts`: when `ambientEffectScope === 'outside'`, an evenodd clipping path is applied before calling `drawAmbientEffects` — a full-canvas rect with a circular hole at the wheel radius. Particles inside the wheel are clipped away.
+
+| Effect | Movement | Canvas draw |
+|---|---|---|
+| Silver stars | Radiate outward from centre | 8-point star path |
+| Gold sparkles | Stationary twinkle (alpha oscillates) | 4-line cross stroke |
+| Sakura | Fall downward, gentle sway | Two `ellipse()` fills |
+| Pink hearts | Rise upward, gentle sway | `arc()` + `bezierCurveTo()` |
+| Snowflakes | Fall downward, spin | 6-arm stroke loop with branches |
+| Confetti | Fall downward, tumble | `fillRect` on rotated context |
+| Fireflies | Wander and wrap at edges | `createRadialGradient` + `arc` |
+
+---
+
+## Spin Event Split: spin-complete vs spin-done
+
+The overlay emits two events on spin completion:
+
+1. **`spin-complete`** — fired immediately when the wheel stops:
+   - Server records the win in `historyStore`
+   - If `segmentImageMode === 'reveal'`, server flips `segment.showImage = true`, saves config, broadcasts `config-update` to overlay clients
+   - Result overlay shown to viewers
+   - Editor preview mirrors the reveal via its `onReveal` callback prop (since the editor ignores `config-update`)
+
+2. **`spin-done`** — fired after `result.duration + result.lingerDuration` milliseconds:
+   - Spin queue releases — next queued spin can fire
+
+This split ensures the queue is not released until viewers have seen the result and any reveal.
+
+---
+
+## Undo / Redo System
+
+Managed entirely in `App.tsx`. Two stacks: `undoStack` and `redoStack`, capped at 30 states each.
+
+**Burst-coalescing**: The first config change in an edit burst captures a "before" snapshot in `historyPendingRef`. A 500ms debounce timer commits that snapshot to the undo stack. Subsequent changes within the window reset the timer — dragging a slider produces one undo state, not one per pixel.
+
+**Initialization guard**: `initializedRef` in the history `useEffect` skips the `DEFAULT_CONFIG → fetchedConfig` transition on load so it is never recorded as an undo state.
+
+**Undo/redo operations** set `isUndoRedoRef.current = true` to prevent the history effect from recording the operation itself as a new history entry, and cancel any pending burst timer.
 
 ---
 
@@ -240,9 +307,10 @@ Typed in `src/types/events.ts`.
 | Event | Payload | Who receives it |
 |---|---|---|
 | `spin` | `{ triggeredBy: string }` | Overlay + Editor (preview) |
-| `config-update` | `{ config: WheelConfig }` | Overlay only (on connect + after preset load) |
-| `chat-message` | `{ platform, username, message, timestamp }` | Editor only (Phase 3) |
-| `integration-status` | `{ platform, status, message? }` | Editor only (Phase 3) |
+| `config-update` | `{ config: WheelConfig }` | Overlay only |
+| `history-update` | `{ history: WinRecord[] }` | Editor only |
+| `chat-message` | `{ platform, username, message, timestamp }` | Editor only |
+| `integration-status` | `{ platform, status, message? }` | Editor only |
 | `spin-queue` | `{ queueLength: number }` | All |
 
 ### Client → Server
@@ -250,7 +318,8 @@ Typed in `src/types/events.ts`.
 | Event | Payload | Sender |
 |---|---|---|
 | `spin-complete` | `{ winner: Segment, triggeredBy: string }` | Overlay or Editor preview |
-| `editor-spin` | — | Editor (Test Spin button) |
+| `spin-done` | — | Overlay or Editor preview (after result + linger) |
+| `editor-spin` | — | Editor (Test Spin / Space bar) |
 
 ---
 
@@ -264,9 +333,9 @@ Trigger arrives → enqueueSpin()
            spinning?  push to queue
            idle?      emit 'spin' immediately, set spinning=true
                        ↓
-    overlay emits 'spin-complete'
+    overlay emits 'spin-complete'  → record win, trigger reveal
                        ↓
-           spinning=false → processQueue()
+    overlay emits 'spin-done'      → spinning=false → processQueue()
 ```
 
 ---
@@ -289,7 +358,7 @@ io.sockets.sockets.forEach → emit 'config-update' to overlay clients only
 OBS overlay re-renders on next frame
 ```
 
-The editor never listens to incoming `config-update` events after the initial load — it manages its own React state. This prevents feedback loops.
+The editor never listens to incoming `config-update` events after the initial load — it manages its own React state. This prevents feedback loops. The one exception is reveal mode: the editor mirrors reveals via the `onReveal` callback prop on `WheelPreview`, which updates local React state directly.
 
 ---
 

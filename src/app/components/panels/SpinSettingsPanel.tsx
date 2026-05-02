@@ -49,7 +49,7 @@ function AudioUpload({
           <div className="flex items-center gap-2">
             <label className="btn-secondary text-xs px-3 py-1.5 cursor-pointer">
               {dataUrl ? 'Replace' : 'Upload MP3/WAV'}
-              <input ref={inputRef} type="file" accept="audio/*" onChange={handleFile} className="sr-only" />
+              <input ref={inputRef} type="file" accept="audio/*" onChange={handleFile} className="hidden" />
             </label>
             {dataUrl && (
               <audio controls src={dataUrl} className="h-8 flex-1 min-w-0" />

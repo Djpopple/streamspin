@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "wheel": {
+    "backgroundColor": "transparent",
+    "borderWidth": 0,
+    "borderColor": "#ffffff",
+    "hubSize": 22,
+    "hubColor": "#ffffff",
+    "globalFont": "Nunito, sans-serif",
+    "globalFontSize": 16,
+    "glowEnabled": false,
+    "glowColor": "#ffffff",
+    "glowIntensity": 10,
+    "shadowEnabled": true,
+    "framePadding": 48,
+    "frameEnabled": false,
+    "labelBold": false,
+    "labelItalic": false,
+    "segmentImageMode": "none",
+    "segmentImageOpacity": 1,
+    "segmentImageOverlay": 0.35
+  },
+  "segments": [
+    { "id": "1", "label": "✨ Kissy name trace", "color": "#c0ddf7", "textColor": "#0d2b4a", "weight": 1, "enabled": true },
+    { "id": "2", "label": "🌶️ DM selfie",        "color": "#6aaed6", "textColor": "#0d2b4a", "weight": 1, "enabled": true },
+    { "id": "3", "label": "🔲 NOTHING LOSER 🔲", "color": "#c0ddf7", "textColor": "#0d2b4a", "weight": 1, "enabled": true },
+    { "id": "4", "label": "♥ +1 min ear licking","color": "#6aaed6", "textColor": "#0d2b4a", "weight": 1, "enabled": true },
+    { "id": "5", "label": "💖 Personal Attention","color": "#c0ddf7", "textColor": "#0d2b4a", "weight": 1, "enabled": true },
+    { "id": "6", "label": "🟠 +3 min ear licking","color": "#6aaed6", "textColor": "#0d2b4a", "weight": 1, "enabled": true },
+    { "id": "7", "label": "♥ Name on body",       "color": "#c0ddf7", "textColor": "#0d2b4a", "weight": 1, "enabled": true },
+    { "id": "8", "label": "⬇️ Countdown",          "color": "#6aaed6", "textColor": "#0d2b4a", "weight": 1, "enabled": true },
+    { "id": "9", "label": "✨ +2 min ear licking", "color": "#c0ddf7", "textColor": "#0d2b4a", "weight": 1, "enabled": true }
+  ],
+  "pointer": {
+    "preset": "custom",
+    "position": "top",
+    "scale": 1.4,
+    "customRotation": 0
+  },
+  "spin": {
+    "durationMin": 4000,
+    "durationMax": 8000,
+    "rotationsMin": 5,
+    "rotationsMax": 10,
+    "easing": "ease-out-cubic",
+    "bounce": false,
+    "bounceIntensity": 0.3
+  },
+  "result": {
+    "enabled": true,
+    "duration": 4000,
+    "lingerDuration": 0,
+    "messageTemplate": "🎉 {winner} 🎉",
+    "backgroundColor": "#0d2b4a",
+    "backgroundOpacity": 0.8,
+    "font": "Nunito, sans-serif",
+    "fontSize": 48,
+    "textColor": "#c0ddf7"
+  },
+  "sound": {
+    "spinStartEnabled": false,
+    "spinStartVolume": 0.8,
+    "winEnabled": false,
+    "winVolume": 0.8
+  },
+  "commands": [
+    { "name": "spin", "trigger": "!spin", "enabled": true, "cooldownSeconds": 30, "modOnly": false, "broadcasterOnly": false, "response": "The wheel is spinning! 🎡" },
+    { "name": "addslice", "trigger": "!addslice", "enabled": true, "cooldownSeconds": 0, "modOnly": true, "broadcasterOnly": false, "response": "" },
+    { "name": "removeslice", "trigger": "!removeslice", "enabled": true, "cooldownSeconds": 0, "modOnly": true, "broadcasterOnly": false, "response": "" }
+  ],
+  "removeWinnerMode": false,
+  "integrations": {
+    "twitch": { "enabled": false, "channel": "", "botUsername": "", "channelPointsEnabled": false },
+    "kick": { "enabled": false, "botrixSetupComplete": false },
+    "webhook": { "enabled": true }
+  }
+}

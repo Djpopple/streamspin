@@ -8,7 +8,7 @@ A fully customisable, browser-source-ready spin wheel for live streamers on Twit
 
 ### Wheel Designer
 - Add, remove, drag-and-drop reorder, and weight segments
-- Per-segment colour picker (10-colour palette + full hex input)
+- Per-segment colour picker (10-colour palette + full hex input) — recently used colours shown at the top of the palette automatically
 - Per-segment advanced options: text colour, gradient fill, font override, label position offset
 - Smart label sizing — all labels sit at the same radius; font scales automatically so wide segments get bigger text and narrow segments get smaller text, everything stays inside the wheel
 - Global font selector — **37 fonts** with live preview (each option rendered in its own typeface), grouped by style: sans-serif, condensed, display, handwriting, serif, gaming, monospace, and custom
@@ -16,6 +16,7 @@ A fully customisable, browser-source-ready spin wheel for live streamers on Twit
 - Border, hub, glow, drop shadow, and background colour controls
 - Frame ring width control (reserves space for artist frame overlays)
 - Frame overlay upload — drop a transparent PNG designed by your artist on top of the wheel
+- **Undo / redo** — Ctrl+Z / Ctrl+Y (or Ctrl+Shift+Z) with up to 30 levels; drag bursts collapse into a single undo state
 
 ### Segment Image System
 - Upload one image that fills the entire wheel circle — segments act as windows into it
@@ -25,7 +26,7 @@ A fully customisable, browser-source-ready spin wheel for live streamers on Twit
   - **Alternating** — even segments show image, odd segments show solid colour
   - **Manual** — per-segment toggle controls which segments show the image
   - **Reveal** — segments start solid; each winning segment permanently reveals its slice of the image, building up the full picture over multiple spins
-- Image opacity and text readability overlay (dark veil) sliders
+- Image opacity and **Darken image** (dark veil) sliders
 - Reset Reveals button to wipe all segments back to solid and start a new game
 
 ### Pointer / Indicator
@@ -284,7 +285,7 @@ Open the **Appearance** panel and scroll to the **Segment Image** section.
 
 1. Choose a mode — **All**, **Alternating**, **Manual**, or **Reveal**
 2. Upload your image (any format — PNG, JPG, etc.)
-3. Adjust **Image opacity** and **Text readability overlay** to taste
+3. Adjust **Image opacity** and **Darken image** to taste
 
 **Reveal mode step by step:**
 
@@ -322,6 +323,7 @@ Click **Import** in the editor header and select any `.json` file from the `pres
 | `big-reveal.json` | Alternating image mode, 5s linger, Fredoka font |
 | `remove-winner-gauntlet.json` | Remove winner mode, 10 viewer slots, Nunito |
 | `minimal-zen.json` | No border/hub/shadow/glow, very slow, muted palette |
+| `blue-asmr.json` | Soft blue ambient particle effects, calm palette |
 
 ---
 
@@ -330,6 +332,8 @@ Click **Import** in the editor header and select any `.json` file from the `pres
 | Key | Action |
 |---|---|
 | `Space` | Test spin (when not focused on a text input) |
+| `Ctrl+Z` | Undo last change |
+| `Ctrl+Y` or `Ctrl+Shift+Z` | Redo |
 
 ---
 
@@ -350,6 +354,153 @@ For artists creating frame overlays or custom pointers:
 - Use the rotation controls in the Pointer panel to fine-tune
 
 Drop font files (`.ttf` / `.woff2`) into [`public/assets/fonts/`](public/assets/fonts/) and ask Claude to wire up the `@font-face` rule.
+
+---
+
+## Ambient Effects
+
+Eight particle effects can be layered over the wheel. All effects have an **Intensity** slider (20–100%) and a **scope** toggle:
+- **Over wheel** — particles render over the entire canvas including the wheel itself
+- **Outside only** — particles are clipped to the area outside the wheel rim, keeping the segments and labels clear
+
+### How they work
+
+All 8 ambient effects are drawn entirely with the **HTML5 Canvas 2D API** — no image files, no external libraries, no assets of any kind. Everything is pure procedural code in [`src/wheel/effects.ts`](src/wheel/effects.ts).
+
+**The architecture in brief:**
+
+- Each effect owns a module-level array of `Particle` objects. Each particle stores: `x`, `y`, `vx`, `vy`, `speed`, `angle`, `radius`, `size`, `opacity`, `phase`, `rotation`, `rotSpeed`, and an optional `color`.
+- Every animation frame, `drawAmbientEffects(ctx, effect, intensity, timestamp)` is called from the renderer. It first **updates** all particles (move, recycle out-of-bounds ones), then **draws** them.
+- Movement is frame-rate-independent: `dt = currentTimestamp - lastTimestamp` (capped at 50ms to survive tab-switch pauses), and all velocity is applied as `position += velocity * dt / 1000`.
+- Smooth oscillation uses `Math.sin(timestamp / 1000 + particle.phase)` — each particle has a random `phase` offset so they pulse out of sync with each other rather than all together.
+
+**The five movement archetypes used across the built-in effects:**
+
+| Pattern | Examples | Mechanism |
+|---|---|---|
+| Radiate outward | Silver stars | `radius += speed * dt`, recycle past canvas edge |
+| Fall downward | Sakura, Snow, Confetti | `y += vy * dt`, recycle when `y > height` |
+| Rise upward | Pink hearts | `y += vy * dt` (vy is negative), recycle when `y < 0` |
+| Wander / wrap | Fireflies | `angle += rotSpeed * dt`, `x += cos(angle) * speed * dt`, wrap at canvas edges |
+| Stationary twinkle | Gold sparkles | No position update — only `globalAlpha` oscillates each frame |
+
+**The Canvas drawing calls used by each effect:**
+
+| Effect | Draw call(s) |
+|---|---|
+| Silver stars | 8-point star path (`lineTo` loop), `fill` + `stroke` |
+| Gold sparkles | 4-line cross (`moveTo` / `lineTo`), `stroke` with `lineCap: round` |
+| Sakura | Two `ellipse()` fills (petal + inner sheen) |
+| Pink hearts | Two `arc()` calls (top bulges) + two `bezierCurveTo()` (sides to bottom point) |
+| Snowflakes | 6 arms via `stroke` in a `rotate` loop, each with two branch lines |
+| Confetti | `fillRect()` on a translated+rotated context |
+| Fireflies | `createRadialGradient()` + `arc` fill — the gradient does the glow |
+
+---
+
+### Adding a custom ambient effect
+
+This is an 8-step checklist across 3 files. No other files need touching.
+
+**Step 1 — Register the name** in `src/types/config.ts`:
+
+```ts
+export type AmbientEffect = 'none' | 'silver-stars' | ... | 'my-effect'
+```
+
+**Step 2 — Write a particle factory** in `src/wheel/effects.ts`. The factory receives the canvas `width` and `height`, and a `scattered` flag (true = initial random scatter, false = spawn at natural entry point):
+
+```ts
+function makeMyEffect(w: number, h: number, scattered: boolean): Particle {
+  return {
+    x: rand(0, w),
+    y: scattered ? rand(0, h) : -20,  // start off-screen top
+    angle: 0, radius: 0,
+    vx: rand(-10, 10),
+    vy: rand(40, 80),   // falls downward
+    speed: 0,
+    size: rand(6, 14),
+    opacity: rand(0.6, 1.0),
+    phase: rand(0, Math.PI * 2),
+    rotation: rand(0, Math.PI * 2),
+    rotSpeed: rand(-1, 1),
+    color: '#ff0000',   // optional — only needed if your draw function uses it
+  }
+}
+```
+
+**Step 3 — Write a draw function.** Use `ctx.save()` / `ctx.restore()` to isolate transforms:
+
+```ts
+function drawMyEffect(
+  ctx: CanvasRenderingContext2D,
+  x: number, y: number,
+  size: number, rotation: number, alpha: number
+): void {
+  ctx.save()
+  ctx.globalAlpha = alpha
+  ctx.translate(x, y)
+  ctx.rotate(rotation)
+  // ... your canvas draw calls here ...
+  ctx.restore()
+}
+```
+
+**Step 4 — Register the factory** in `makeParticle()`:
+
+```ts
+function makeParticle(effect: AmbientEffect, w: number, h: number, scattered = false): Particle {
+  // ... existing cases ...
+  if (effect === 'my-effect') return makeMyEffect(w, h, scattered)
+  return makePetal(w, h, scattered)
+}
+```
+
+**Step 5 — Set a particle count** in `particleCount()`:
+
+```ts
+const base = ...
+           : effect === 'my-effect' ? 20
+           : 14
+```
+
+**Step 6 — Add update logic** in the update loop inside `drawAmbientEffects()`:
+
+```ts
+if (effect === 'my-effect') {
+  p.y += p.vy * dt / 1000
+  p.x += p.vx * dt / 1000
+  p.rotation += p.rotSpeed * dt / 1000
+  if (p.y > height + 30) {
+    _particles[i] = makeMyEffect(width, height, false)
+  }
+}
+```
+
+**Step 7 — Add the draw call** in the draw loop (immediately after the update loop in the same function):
+
+```ts
+if (effect === 'my-effect') {
+  drawMyEffect(ctx, p.x, p.y, p.size, p.rotation, p.opacity)
+}
+```
+
+**Step 8 — Add the button and description** in `src/app/components/panels/AppearancePanel.tsx`:
+
+```tsx
+// In the grid:
+{ value: 'my-effect', label: 'My Effect' },
+
+// In the description paragraph:
+{wheel.ambientEffect === 'my-effect' && 'Description shown below the scope toggle.'}
+```
+
+**Tips:**
+- Use `Math.sin(t + p.phase)` (where `t = timestamp / 1000`) to oscillate any property — multiply by how far you want it to swing.
+- `createRadialGradient(x, y, 0, x, y, size)` is the easiest way to make anything glow.
+- Keep draw calls simple — this runs every animation frame (60fps). Avoid `ctx.shadowBlur` inside per-particle loops; use a gradient instead.
+- The `scattered` flag is your friend: on first initialisation it's `true` so particles fill the canvas immediately rather than all pouring in from one edge.
+- Test in both "Over wheel" and "Outside only" scope modes — in outside-only, particles inside the wheel radius are clipped away, so effects that only spawn near the centre may appear blank.
 
 ---
 
@@ -421,7 +572,7 @@ This can happen if the overlay disconnected mid-spin. Right-click the OBS browse
 
 ## Roadmap
 
-Phases 0–4 complete including segment images, reveal mode, and win history. Next: Phase 5 — Electron packaging into a single `.exe`.
+Phases 0–4 complete including segment images, reveal mode, win history, ambient effects, and undo/redo. Next: Phase 5 — Electron packaging into a single `.exe`.
 
 See [TODO.md](TODO.md) for the full breakdown.
 

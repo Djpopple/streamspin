@@ -24,6 +24,18 @@ export function ColorInput({ label, value, onChange, className = '', compact = f
   const containerRef = useRef<HTMLDivElement>(null)
   const nativeRef = useRef<HTMLInputElement>(null)
 
+  // Save to recent only when the OS picker commits (native 'change', not 'input'/drag)
+  useEffect(() => {
+    const el = nativeRef.current
+    if (!el) return
+    const handler = () => {
+      addRecentColor(el.value)
+      setRecent(getRecentColors())
+    }
+    el.addEventListener('change', handler)
+    return () => el.removeEventListener('change', handler)
+  }, [])
+
   // Refresh recent list and register outside-click handler when dropdown opens
   useEffect(() => {
     if (!open) return
@@ -44,11 +56,9 @@ export function ColorInput({ label, value, onChange, className = '', compact = f
 
   const handleHex = (raw: string) => {
     const norm = normaliseHex(raw.startsWith('#') ? raw : `#${raw}`)
-    if (norm) onChange(norm)
-  }
-
-  const commitRecent = () => {
-    addRecentColor(value)
+    if (!norm) return
+    onChange(norm)
+    addRecentColor(norm)
     setRecent(getRecentColors())
   }
 
@@ -69,6 +79,16 @@ export function ColorInput({ label, value, onChange, className = '', compact = f
             onClick={() => setOpen(o => !o)}
           />
 
+          {/* Native picker — always in DOM so the 'change' listener is stable */}
+          <input
+            ref={nativeRef}
+            type="color"
+            value={value}
+            onChange={e => onChange(e.target.value)}
+            className="absolute opacity-0 w-px h-px overflow-hidden"
+            tabIndex={-1}
+          />
+
           {/* Palette dropdown */}
           {open && (
             <div className="absolute top-full left-0 z-30 mt-1 p-3 bg-surface-overlay rounded-lg border border-white/15 shadow-xl w-72">
@@ -85,7 +105,7 @@ export function ColorInput({ label, value, onChange, className = '', compact = f
                     title={c}
                     style={{ backgroundColor: c }}
                     className={`w-5 h-5 rounded-full border-2 transition-transform hover:scale-110 ${
-                      value === c ? 'border-white' : 'border-transparent'
+                      value.toLowerCase() === c.toLowerCase() ? 'border-white' : 'border-transparent'
                     } ${i < recent.length ? 'ring-1 ring-white/30' : ''}`}
                     onClick={() => pick(c)}
                   />
@@ -102,20 +122,10 @@ export function ColorInput({ label, value, onChange, className = '', compact = f
                   onClick={() => nativeRef.current?.click()}
                 />
                 <input
-                  ref={nativeRef}
-                  type="color"
-                  value={value}
-                  onChange={e => onChange(e.target.value)}
-                  onBlur={commitRecent}
-                  className="absolute opacity-0 w-px h-px overflow-hidden"
-                  tabIndex={-1}
-                />
-                <input
                   type="text"
                   defaultValue={value}
                   key={`dd-${value}`}
                   onChange={e => handleHex(e.target.value)}
-                  onBlur={commitRecent}
                   className="input text-xs py-1 font-mono flex-1"
                   maxLength={7}
                   placeholder="#ffffff"
@@ -132,7 +142,6 @@ export function ColorInput({ label, value, onChange, className = '', compact = f
             defaultValue={value}
             key={value}
             onChange={e => handleHex(e.target.value)}
-            onBlur={commitRecent}
             className="input text-sm font-mono flex-1 py-1.5"
             maxLength={7}
             placeholder="#ffffff"

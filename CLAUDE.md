@@ -67,6 +67,7 @@ src/
                         Smart label sizing: fixed radius, font scales to chord+radial geometry
     physics.ts          computeSegmentLayout, createSpinAnimation, tickAnimation
     pointers.ts         Canvas-drawn pointer presets
+    effects.ts          drawAmbientEffects — 8 particle effects, frame-rate-independent dt loop
 
   overlay/
     main.ts             OBS overlay entry — Socket.io + rAF loop
@@ -117,6 +118,10 @@ src/
 
 6. **`renderFrame` is wrapped in a top-level `ctx.save()`/`ctx.restore()`.** Any bad transform (e.g. NaN from missing config fields) cannot leak into the next frame.
 
+7. **`renderFrame` calls are wrapped in `try/catch`** in both `WheelPreview.tsx` and `overlay/main.ts`. A renderer exception must never kill the rAF loop — that would leave a permanently blank canvas.
+
+8. **All `<input type="file">` elements use `className="hidden"`, not `className="sr-only"`.** `sr-only` positions the input absolutely relative to the viewport with no positioned ancestor; the browser calls `scrollIntoView()` on focus when a label is clicked, causing the sidebar to jump. `hidden` (display:none) inputs still open the file dialog via label clicks but cannot receive focus.
+
 ---
 
 ## Label Rendering (Smart Auto-Sizing)
@@ -154,6 +159,8 @@ Per-segment `labelRadiusOffset` shifts the fixed base position inward/outward an
 - Do not bind the server to anything other than `127.0.0.1`.
 - Do not return a stored config to the client without running `migrateConfig` first.
 - Do not use `sr-only` on `<input type="color">` — use `opacity-0 w-px h-px` instead (sr-only's clip rect prevents the OS colour picker from opening).
+- Do not use `sr-only` on `<input type="file">` — use `hidden` instead (sr-only causes scroll-to-focus jump on label click; see Architecture Rule 8).
+- Do not use `justify-center` directly on an `overflow-auto` flex container — top overflow becomes inaccessible. Use `min-h-full` on the inner wrapper combined with `justify-center` on the wrapper itself.
 
 ---
 
@@ -176,6 +183,7 @@ Per-segment `labelRadiusOffset` shifts the fixed base position inward/outward an
 | `src/wheel/renderer.ts` | Canvas rendering engine — smart label sizing |
 | `src/wheel/physics.ts` | Spin animation + winner detection |
 | `src/wheel/pointers.ts` | Canvas pointer presets |
+| `src/wheel/effects.ts` | Ambient particle effects — 8 types, frame-rate-independent |
 | `src/server/index.ts` | Express + Socket.io entry point |
 | `src/server/migration.ts` | Config schema migration |
 | `src/server/socketBridge.ts` | Spin queue + event routing |
@@ -238,3 +246,8 @@ OBS overlay: `http://localhost:3000/wheel` (always this URL, even in dev)
 - Reveal mode: spin-complete triggers server-side showImage flip + config-update broadcast; spin-done (after linger) releases queue
 - Post-result linger slider (lingerDuration on ResultDisplay) — wheel holds on screen after overlay fades before next spin fires
 - spin-complete / spin-done event split: complete = win recorded + reveal; done = queue released
+- Ambient particle effects (effects.ts) — 8 types, frame-rate-independent dt loop, intensity + scope (all / outside-only) controls
+- Recent colours — last 6 used colours surface automatically at top of per-segment colour palette
+- Undo / redo — Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z, 30-level stacks, 500ms burst-coalescing in App.tsx
+- Reveal mode editor preview fix — onReveal callback prop on WheelPreview updates local config state directly (editor doesn't listen to config-update socket)
+- All file inputs use `hidden` not `sr-only` to prevent scroll-to-focus sidebar jump

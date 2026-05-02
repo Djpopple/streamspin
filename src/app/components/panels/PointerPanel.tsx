@@ -114,7 +114,7 @@ export function PointerPanel({ pointer, onChange }: Props) {
         <label className={`flex items-center gap-2 cursor-pointer rounded-md border-2 border-dashed p-3 transition-colors ${
           pointer.preset === 'custom' ? 'border-accent/50 bg-accent/5' : 'border-white/15 hover:border-white/30'
         }`}>
-          <input type="file" accept="image/png,image/jpeg,image/webp" onChange={handleCustomUpload} className="sr-only" />
+          <input type="file" accept="image/png,image/jpeg,image/webp" onChange={handleCustomUpload} className="hidden" />
           {pointer.preset === 'custom' && pointer.customImageDataUrl ? (
             <>
               <img src={pointer.customImageDataUrl} alt="Custom pointer" className="w-8 h-8 object-contain" />

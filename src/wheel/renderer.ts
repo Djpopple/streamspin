@@ -54,12 +54,11 @@ export function renderFrame(
     return
   }
 
-  applyShadow(ctx, config)
+  drawShadow(ctx, config, cx, cy, radius)
   applyGlow(ctx, config)
   drawSegments(ctx, config, layout, cx, cy, radius, rotation)
   drawSegmentImages(ctx, config, layout, cx, cy, radius, rotation)
   clearGlow(ctx)
-  clearShadow(ctx)
 
   drawBorder(ctx, config, cx, cy, radius)
   drawHub(ctx, config, cx, cy)
@@ -296,20 +295,30 @@ function drawLabels(
 }
 
 // ── Shadow ────────────────────────────────────────────────────────────────────
+//
+// Shadow is applied to a single circle drawn before the segments, not to each
+// segment individually. Per-segment shadows are directional and inconsistent —
+// segments facing away from the shadow offset look flat while others pop.
+// A single circular shadow is uniform and rotates correctly with the wheel.
 
-function applyShadow(ctx: CanvasRenderingContext2D, config: WheelConfig): void {
+function drawShadow(
+  ctx: CanvasRenderingContext2D,
+  config: WheelConfig,
+  cx: number, cy: number, radius: number
+): void {
   if (!config.wheel.shadowEnabled) return
+  ctx.save()
   ctx.shadowColor = 'rgba(0,0,0,0.55)'
   ctx.shadowBlur = 18
   ctx.shadowOffsetX = 4
   ctx.shadowOffsetY = 4
-}
-
-function clearShadow(ctx: CanvasRenderingContext2D): void {
-  ctx.shadowColor = 'transparent'
-  ctx.shadowBlur = 0
-  ctx.shadowOffsetX = 0
-  ctx.shadowOffsetY = 0
+  ctx.beginPath()
+  ctx.arc(cx, cy, radius, 0, TWO_PI)
+  // Opaque fill required — canvas scales shadow strength by source alpha.
+  // Segments paint over this circle so the fill is never visible.
+  ctx.fillStyle = '#000000'
+  ctx.fill()
+  ctx.restore()
 }
 
 // ── Glow ──────────────────────────────────────────────────────────────────────
@@ -393,7 +402,12 @@ function drawFrame(
   if (!config.wheel.frameEnabled || !config.wheel.frameImageDataUrl) return
   const img = _frameImageCache.get(config.wheel.frameImageDataUrl)
   if (!img) return
-  ctx.drawImage(img, 0, 0, width, height)
+  const scale = (config.wheel.frameScale ?? 100) / 100
+  const drawW = width  * scale
+  const drawH = height * scale
+  const cx = width  / 2
+  const cy = height / 2
+  ctx.drawImage(img, cx - drawW / 2, cy - drawH / 2, drawW, drawH)
 }
 
 // ── Empty state ───────────────────────────────────────────────────────────────

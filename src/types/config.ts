@@ -3,7 +3,7 @@
 // import from here. Keep it in sync with config.json.example.
 
 export type SegmentImageMode = 'none' | 'all' | 'alternating' | 'manual' | 'reveal'
-export type AmbientEffect = 'none' | 'silver-stars' | 'gold-sparkles' | 'sakura'
+export type AmbientEffect = 'none' | 'silver-stars' | 'gold-sparkles' | 'sakura' | 'pink-hearts' | 'snowflakes' | 'confetti' | 'fireflies'
 
 export interface Segment {
   id: string
@@ -66,6 +66,7 @@ export interface WheelAppearance {
   framePadding: number          // px ring between wheel rim and canvas edge (space for frame art)
   frameEnabled: boolean
   frameImageDataUrl?: string    // base64 PNG frame overlay rendered on top of wheel
+  frameScale: number            // scale of the frame PNG drawn on canvas (50–150, default 100 = fill canvas)
   labelBold: boolean
   labelItalic: boolean
   segmentImageMode: SegmentImageMode
@@ -162,6 +163,7 @@ export const DEFAULT_CONFIG: WheelConfig = {
     shadowEnabled: true,
     framePadding: 56,
     frameEnabled: false,
+    frameScale: 100,
     labelBold: false,
     labelItalic: false,
     segmentImageMode: 'none',

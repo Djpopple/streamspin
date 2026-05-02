@@ -1,11 +1,31 @@
 // Shared constants for the editor UI
 
+// Full 18-colour palette shown in the picker dropdown.
+// Ordered warm → greens → cools → blues → purples → utility neutrals.
 export const SEGMENT_COLORS = [
-  '#e94560', '#f97316', '#eab308', '#22c55e',
-  '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899',
-  '#14b8a6', '#f43f5e', '#a855f7', '#84cc16',
-  '#fbbf24', '#10b981', '#6366f1', '#ffffff',
+  '#E53935', // Red
+  '#FB8C00', // Orange
+  '#FBC02D', // Amber / Gold
+  '#FFEB3B', // Yellow
+  '#C0CA33', // Lime
+  '#43A047', // Green
+  '#00897B', // Teal
+  '#00ACC1', // Cyan
+  '#42A5F5', // Sky Blue
+  '#1E88E5', // Blue
+  '#0D47A1', // Deep Blue / Navy
+  '#3949AB', // Indigo
+  '#8E24AA', // Purple
+  '#D81B60', // Pink / Magenta
+  '#6D4C41', // Brown
+  '#757575', // Gray
+  '#212121', // Near-Black
+  '#FFFFFF', // White
 ]
+
+// Subset used when auto-assigning colours to new segments.
+// Excludes white (white text on white segment = invisible).
+const CYCLE_COLORS = SEGMENT_COLORS.filter(c => c !== '#FFFFFF')
 
 export const FONTS = [
   // Sans-serif — clean
@@ -65,5 +85,5 @@ export function generateId(): string {
 }
 
 export function cycleColor(index: number): string {
-  return SEGMENT_COLORS[index % SEGMENT_COLORS.length]
+  return CYCLE_COLORS[index % CYCLE_COLORS.length]
 }

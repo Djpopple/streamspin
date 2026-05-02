@@ -28,9 +28,10 @@ interface Props {
   config: WheelConfig
   socket: AppSocket | null
   size?: number
+  onReveal?: (winnerId: string) => void
 }
 
-export function WheelPreview({ config, socket, size = 480 }: Props) {
+export function WheelPreview({ config, socket, size = 480, onReveal }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [resultText, setResultText] = useState<string | null>(null)
   const resultTimerRef = useRef<ReturnType<typeof setTimeout>>()
@@ -39,10 +40,13 @@ export function WheelPreview({ config, socket, size = 480 }: Props) {
   // without needing to restart the loop on every config change.
   const configRef = useRef(config)
   const socketRef = useRef(socket)    // keeps socket fresh inside the rAF closure
+  const onRevealRef = useRef(onReveal)
   const layoutRef = useRef<SegmentLayout[]>(computeSegmentLayout(config.segments))
   const animRef = useRef<SpinAnimation | null>(null)
   const rotationRef = useRef(0)
   const triggeredByRef = useRef('editor')
+
+  useEffect(() => { onRevealRef.current = onReveal }, [onReveal])
 
   useEffect(() => {
     configRef.current = config
@@ -90,6 +94,10 @@ export function WheelPreview({ config, socket, size = 480 }: Props) {
           })
           animRef.current = null
 
+          if (configRef.current.wheel.segmentImageMode === 'reveal') {
+            onRevealRef.current?.(winnerSegment.id)
+          }
+
           // Show result overlay in editor preview
           const { result } = configRef.current
           if (result.enabled) {
@@ -106,7 +114,11 @@ export function WheelPreview({ config, socket, size = 480 }: Props) {
         }
       }
 
-      renderFrame(ctx, configRef.current, layoutRef.current, rotationRef.current, now)
+      try {
+        renderFrame(ctx, configRef.current, layoutRef.current, rotationRef.current, now)
+      } catch (e) {
+        console.error('[WheelPreview] renderFrame error:', e)
+      }
       rafId = requestAnimationFrame(loop)
     }
 

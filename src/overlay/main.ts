@@ -110,7 +110,11 @@ function loop() {
     }
   }
 
-  renderFrame(ctx, config, layout, rotation, now)
+  try {
+    renderFrame(ctx, config, layout, rotation, now)
+  } catch (e) {
+    console.error('[StreamSpin] renderFrame error:', e)
+  }
   requestAnimationFrame(loop)
 }
 

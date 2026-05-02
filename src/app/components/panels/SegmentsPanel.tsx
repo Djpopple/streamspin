@@ -191,7 +191,7 @@ function SegmentRow({
               <input
                 type="file"
                 accept="audio/*"
-                className="sr-only"
+                className="hidden"
                 onChange={e => {
                   const file = e.target.files?.[0]
                   if (!file) return

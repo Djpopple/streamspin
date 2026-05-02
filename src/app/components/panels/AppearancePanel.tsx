@@ -185,17 +185,6 @@ export function AppearancePanel({ wheel, onChange, onResetReveal }: Props) {
         </div>
       </div>
 
-      {/* Frame ring */}
-      <Slider
-        label="Frame ring width"
-        value={wheel.framePadding}
-        min={20} max={160} step={4} unit="px"
-        onChange={v => set('framePadding', v)}
-      />
-      <p className="text-white/25 text-xs -mt-1">
-        Space between wheel rim and canvas edge — for frame artwork overlays.
-      </p>
-
       {/* Frame overlay */}
       <div className="space-y-2">
         <Toggle
@@ -212,7 +201,7 @@ export function AppearancePanel({ wheel, onChange, onResetReveal }: Props) {
             <input
               type="file"
               accept="image/png,image/webp"
-              className="sr-only"
+              className="hidden"
               onChange={e => {
                 const file = e.target.files?.[0]
                 if (!file) return
@@ -241,10 +230,27 @@ export function AppearancePanel({ wheel, onChange, onResetReveal }: Props) {
             ✕ Remove frame
           </button>
         )}
+        {wheel.frameEnabled && (
+          <Slider
+            label="Frame ring scale"
+            value={wheel.frameScale ?? 100}
+            min={50} max={150} step={5} unit="%"
+            onChange={v => set('frameScale', v)}
+          />
+        )}
         <p className="text-white/25 text-xs">
           Design a square PNG with transparent centre — see docs for artist spec.
+          {wheel.frameEnabled && ' Use the wheel padding below to size the wheel to sit inside your ring.'}
         </p>
       </div>
+
+      {/* Wheel padding — space between wheel rim and canvas edge */}
+      <Slider
+        label="Wheel padding"
+        value={wheel.framePadding}
+        min={0} max={160} step={4} unit="px"
+        onChange={v => set('framePadding', v)}
+      />
 
       {/* Ambient effects */}
       <div className="space-y-2">
@@ -255,6 +261,10 @@ export function AppearancePanel({ wheel, onChange, onResetReveal }: Props) {
             { value: 'silver-stars',  label: 'Stars' },
             { value: 'gold-sparkles', label: 'Sparkles' },
             { value: 'sakura',        label: 'Sakura' },
+            { value: 'pink-hearts',   label: 'Hearts' },
+            { value: 'snowflakes',    label: 'Snow' },
+            { value: 'confetti',      label: 'Confetti' },
+            { value: 'fireflies',     label: 'Fireflies' },
           ] as { value: AmbientEffect; label: string }[]).map(opt => (
             <button
               key={opt.value}
@@ -308,6 +318,10 @@ export function AppearancePanel({ wheel, onChange, onResetReveal }: Props) {
               {wheel.ambientEffect === 'silver-stars'  && 'White 4-pointed stars drift outward from the wheel centre and pulse.'}
               {wheel.ambientEffect === 'gold-sparkles' && 'Gold sparkles scattered across the canvas twinkle in and out.'}
               {wheel.ambientEffect === 'sakura'        && 'Pink cherry blossom petals fall gently across the canvas.'}
+              {wheel.ambientEffect === 'pink-hearts'   && 'Pink hearts float upward across the canvas with a gentle sway.'}
+              {wheel.ambientEffect === 'snowflakes'    && 'White snowflakes drift slowly downward across the canvas.'}
+              {wheel.ambientEffect === 'confetti'      && 'Colourful confetti pieces tumble and fall across the canvas.'}
+              {wheel.ambientEffect === 'fireflies'     && 'Soft glowing fireflies wander lazily across the canvas.'}
             </p>
           </>
         )}
@@ -347,7 +361,7 @@ export function AppearancePanel({ wheel, onChange, onResetReveal }: Props) {
               <input
                 type="file"
                 accept="image/*"
-                className="sr-only"
+                className="hidden"
                 onChange={e => {
                   const file = e.target.files?.[0]
                   if (!file) return
@@ -377,13 +391,13 @@ export function AppearancePanel({ wheel, onChange, onResetReveal }: Props) {
               onChange={v => set('segmentImageOpacity', v / 100)}
             />
             <Slider
-              label="Text readability overlay"
+              label="Darken image"
               value={Math.round(wheel.segmentImageOverlay * 100)}
               min={0} max={80} step={5} unit="%"
               onChange={v => set('segmentImageOverlay', v / 100)}
             />
             <p className="text-white/25 text-xs -mt-1">
-              Dark veil drawn over image segments so labels stay readable.
+              Dark veil over image segments — helps light-coloured labels stay readable.
             </p>
 
             {wheel.segmentImageMode === 'reveal' && (

@@ -127,6 +127,31 @@ Legend: `[x]` = done, `[ ]` = todo, `[-]` = deferred / won't do this phase
 
 ---
 
+## Phase 4e — Ambient Effects + QoL + Bug Fixes ✅
+- [x] **Ambient particle effects** — 8 effects rendered entirely with Canvas 2D API (no assets):
+  - Silver stars (radiate outward, 4-point star path)
+  - Gold sparkles (stationary twinkle, cross stroke)
+  - Sakura / cherry blossoms (falling ellipse petals)
+  - Pink hearts (rising, bezierCurveTo construction)
+  - Snowflakes (falling, 6-arm stroke loop with branches)
+  - Confetti (tumbling fillRect)
+  - Fireflies (wandering radial-gradient glow)
+  - None (off)
+- [x] Intensity slider (20–100%) per effect
+- [x] Scope toggle: "Over wheel" / "Outside only" — outside clips particles to area beyond wheel rim via evenodd arc path
+- [x] **Recent colours** — last 6 used colours auto-appear at top of per-segment colour palette
+- [x] **Undo / redo** — Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z, 30-level stacks, 500ms burst-coalescing (dragging a slider = one undo state)
+- [x] **Bug fixes:**
+  - Reveal mode now mirrors correctly in editor preview (onReveal callback → local state, bypasses socket)
+  - `sr-only` → `hidden` on all `<input type="file">` — prevents browser scroll-to-focus jump when label is clicked
+  - `min-h-0` on sidebar `<aside>` — prevents flex `min-height: auto` from overflowing scroll container
+  - `min-h-full` centering pattern on preview `<main>` — fixes inaccessible top-overflow caused by `justify-center` on a scroll container
+  - `try/catch` around `renderFrame` in both `WheelPreview.tsx` and `overlay/main.ts` — a renderer error no longer kills the rAF loop permanently
+  - `initializedRef` guard in history `useEffect` — prevents DEFAULT_CONFIG being recorded as the first undo state on load
+- [x] "Text readability overlay" slider renamed to "Darken image"
+
+---
+
 ## Phase 5 — Distribution (Next)
 - [ ] Electron wrapper — bundle server + editor into single `.exe` / `.dmg`
 - [ ] Auto-updater (Electron)
